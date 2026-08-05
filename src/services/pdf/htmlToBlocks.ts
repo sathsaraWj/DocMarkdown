@@ -137,6 +137,15 @@ function parseTable(el: Element): ContentBlock {
   return { type: 'table', header, align, rows: dataRows }
 }
 
+/**
+ * Returns the paragraph's sole element child (ignoring whitespace-only
+ * text), if there's exactly one. Only meaningful for phrasing content like
+ * `<img>` — a block-level element such as `<hr>` can never actually end up
+ * nested inside a parsed `<p>` in the first place, since the HTML5 parsing
+ * algorithm auto-closes an open `<p>` before it (see the top-level `HR`
+ * handling in parseChildren, which is where a Word page break is actually
+ * caught after that auto-close hoists it back out to be a sibling).
+ */
 function isImageOnlyParagraph(el: Element): Element | null {
   const children = Array.from(el.childNodes).filter(
     (n) => !(n.nodeType === Node.TEXT_NODE && !(n.textContent ?? '').trim()),
@@ -181,7 +190,7 @@ function parseChildren(container: Element): ContentBlock[] {
       continue
     }
     if (tag === 'HR') {
-      blocks.push({ type: 'hr' })
+      blocks.push(el.classList.contains('docx-page-break') ? { type: 'page-break' } : { type: 'hr' })
       continue
     }
     if (tag === 'TABLE') {

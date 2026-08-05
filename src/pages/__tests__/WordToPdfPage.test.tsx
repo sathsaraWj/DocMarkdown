@@ -24,9 +24,16 @@ function renderPage() {
 async function uploadSample() {
   const input = screen.getByLabelText(/choose a \.docx word document/i) as HTMLInputElement
   fireEvent.change(input, { target: { files: [loadFixture('sample.docx')] } })
-  await waitFor(() => {
-    expect(screen.getByRole('heading', { level: 1, name: /sample report/i })).toBeInTheDocument()
-  })
+  await waitFor(
+    () => {
+      expect(screen.getByRole('heading', { level: 1, name: /sample report/i })).toBeInTheDocument()
+    },
+    // Parsing now also reads the docx's raw XML for layout hints (page
+    // size/margins/font) alongside mammoth, which is a little slower under
+    // load than mammoth conversion alone — give this more headroom than
+    // waitFor's ~1s default.
+    { timeout: 5000 },
+  )
 }
 
 describe('WordToPdfPage', () => {
@@ -41,9 +48,12 @@ describe('WordToPdfPage', () => {
     Object.defineProperty(nextFile, 'name', { value: 'replacement.docx' })
     fireEvent.change(replaceInput, { target: { files: [nextFile] } })
 
-    await waitFor(() => {
-      expect(screen.getByText('replacement.docx')).toBeInTheDocument()
-    })
+    await waitFor(
+      () => {
+        expect(screen.getByText('replacement.docx')).toBeInTheDocument()
+      },
+      { timeout: 5000 },
+    )
   })
 
   it('clears the document after confirming the clear dialog', async () => {

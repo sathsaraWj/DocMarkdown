@@ -3,7 +3,15 @@ import type { jsPDF } from 'jspdf'
 import type { RgbTuple } from '@/utils/color'
 import type { CellAlign, ContentBlock, ListItemBlock, TextRun } from './blocks'
 
-export type PdfFontFamily = 'helvetica' | 'times' | 'courier'
+export type PdfFontFamily =
+  | 'helvetica'
+  | 'times'
+  | 'courier'
+  | 'Carlito'
+  | 'Caladea'
+  | 'Arimo'
+  | 'Tinos'
+  | 'Cousine'
 
 export interface PdfTheme {
   bodyFont: PdfFontFamily
@@ -223,7 +231,22 @@ export class PdfWriter {
   drawHeading(runs: TextRun[], level: 1 | 2 | 3 | 4 | 5 | 6): void {
     const scale = Math.pow(this.theme.headingScale, 6 - level + 1)
     const fontSize = Math.min(this.theme.bodyFontSize * scale, this.theme.bodyFontSize * 2.6)
-    this.addVerticalSpace(level <= 2 ? 4 : 3)
+    const leadingSpace = level <= 2 ? 4 : 3
+    const ruleSpace = level === 1 ? 6 : 0
+    // A heading followed by nothing but a page break reads as broken — reserve
+    // room for the heading itself PLUS at least one line of whatever comes
+    // next before committing to draw it on the current page, so a heading
+    // never ends up alone as the last line on a page.
+    const orphanGuardHeight =
+      leadingSpace +
+      this.lineHeightFor(fontSize) +
+      2 +
+      ruleSpace +
+      this.lineHeightFor(this.theme.bodyFontSize)
+    if (this.cursorY + orphanGuardHeight > this.contentBottom && this.cursorY > this.contentTop) {
+      this.newPage()
+    }
+    this.addVerticalSpace(leadingSpace)
     this.drawRuns(runs, {
       x: this.contentLeft,
       maxWidth: this.contentWidth,
@@ -495,6 +518,9 @@ export class PdfWriter {
           break
         case 'hr':
           this.drawHr()
+          break
+        case 'page-break':
+          this.newPage()
           break
         case 'image':
           if (block.src.startsWith('data:image/')) {

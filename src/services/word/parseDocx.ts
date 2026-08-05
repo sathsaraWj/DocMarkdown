@@ -1,6 +1,7 @@
 import * as mammoth from 'mammoth'
 
 import type { WordParseMessage, WordParseResult } from '@/types/word'
+import { extractDocxLayoutHints } from './parseDocxLayout'
 import { sanitizeWordHtml } from './wordHtmlSanitizer'
 
 /**
@@ -133,5 +134,10 @@ export async function parseDocx(file: File): Promise<WordParseResult> {
     message: message.message,
   }))
 
-  return { html, warnings, title, imageCount }
+  // Best-effort only — layout hints come from a separate raw-XML read of the
+  // same archive and must never fail the conversion that mammoth already
+  // succeeded at.
+  const layoutHints = await extractDocxLayoutHints(arrayBuffer).catch(() => null)
+
+  return { html, warnings, title, imageCount, layoutHints }
 }

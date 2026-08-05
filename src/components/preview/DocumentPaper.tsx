@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { getPageDimensionsMm } from '@/types/page'
 import type { DocumentSettings } from '@/types/settings'
 import type { DocumentTemplate } from '@/types/template'
-import { buildContentCss } from '@/styles/documentContentCss'
+import { buildContentCss, type ContentFontOverride } from '@/styles/documentContentCss'
 import { mmToPx } from '@/utils/pageMath'
 
 interface DocumentPaperProps {
@@ -11,6 +11,8 @@ interface DocumentPaperProps {
   settings: DocumentSettings
   template: DocumentTemplate
   onNaturalHeightChange?: (heightPx: number) => void
+  /** Word-only: renders in the source document's detected font instead of the template's generic font bucket. */
+  fontOverride?: ContentFontOverride
 }
 
 function resolveHeaderFooterPreview(
@@ -33,6 +35,7 @@ export function DocumentPaper({
   settings,
   template,
   onNaturalHeightChange,
+  fontOverride,
 }: DocumentPaperProps) {
   const { page, headerFooter, metadata } = settings
   const { width, height } = getPageDimensionsMm(page)
@@ -70,7 +73,7 @@ export function DocumentPaper({
     onNaturalHeightChange?.(Math.max(heightPx, naturalHeightPx))
   }, [naturalHeightPx, heightPx, onNaturalHeightChange])
 
-  const contentCss = buildContentCss(settings, template)
+  const contentCss = buildContentCss(settings, template, 'doc-content', fontOverride)
 
   return (
     <div

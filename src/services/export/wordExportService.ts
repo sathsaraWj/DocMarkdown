@@ -1,3 +1,4 @@
+import type { PdfThemeFontOverride } from '@/services/pdf/theme'
 import type { DocumentSettings } from '@/types/settings'
 import type { DocumentTemplate } from '@/types/template'
 import type { ExportProgress, ExportResult } from '@/types/export'
@@ -12,6 +13,7 @@ export interface RunWordExportInput {
   images: WordImageOptions
   settings: DocumentSettings
   template: DocumentTemplate
+  fontOverride?: PdfThemeFontOverride
   onProgress?: (progress: ExportProgress) => void
 }
 
@@ -27,6 +29,7 @@ export async function runWordExport({
   images,
   settings,
   template,
+  fontOverride,
   onProgress,
 }: RunWordExportInput): Promise<ExportResult> {
   try {
@@ -48,6 +51,7 @@ export async function runWordExport({
       images,
       settings,
       template,
+      fontOverride,
       onProgress,
     })
     downloadBlob(blob, filename)

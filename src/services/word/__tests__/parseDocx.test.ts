@@ -61,4 +61,20 @@ describe('parseDocx', () => {
     const result = await parseDocx(file)
     expect(result.html).not.toContain('<script')
   })
+
+  it('extracts the source document\'s real page size and margins from its sectPr', async () => {
+    const file = loadFixture('sample.docx')
+    const result = await parseDocx(file)
+    expect(result.layoutHints?.page).toEqual({
+      size: 'Letter',
+      orientation: 'portrait',
+      margins: { top: 25.4, right: 25.4, bottom: 25.4, left: 25.4 },
+    })
+  })
+
+  it('gracefully reports no font hint when the docx has no styles.xml', async () => {
+    const file = loadFixture('sample.docx')
+    const result = await parseDocx(file)
+    expect(result.layoutHints?.font).toBeNull()
+  })
 })

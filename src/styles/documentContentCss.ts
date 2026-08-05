@@ -20,14 +20,24 @@ function getFontStack(id: DocumentSettings['typography']['fontFamily']): {
  * once — otherwise every instance's CSS custom properties would collide on
  * the shared `.doc-content` selector and only the last one would win.
  */
+export interface ContentFontOverride {
+  body?: string
+  heading?: string
+}
+
 export function buildContentCss(
   settings: DocumentSettings,
   template: DocumentTemplate,
   scopeClass = 'doc-content',
+  fontOverride?: ContentFontOverride,
 ): string {
   const { typography, content } = settings
   const { style } = template
-  const fonts = getFontStack(typography.fontFamily)
+  const bucketFonts = getFontStack(typography.fontFamily)
+  const fonts = {
+    body: fontOverride?.body ?? bucketFonts.body,
+    heading: fontOverride?.heading ?? bucketFonts.heading,
+  }
   const baseSize = typography.bodyFontSize
   const scale = typography.headingScale
 

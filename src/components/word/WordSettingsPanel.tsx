@@ -7,6 +7,7 @@ import type { FontFamilyId } from '@/types/typography'
 import type { HeaderFooterSettings } from '@/types/headerFooter'
 import type { PageSettings } from '@/types/page'
 import type { TemplateId } from '@/types/template'
+import { getWordPdfFontOverride } from '@/services/word/wordFontOverride'
 import { WORD_IMAGE_QUALITY_LIMITS, type WordConversionSettings } from '@/types/word'
 import { WordExportPanel } from './WordExportPanel'
 
@@ -170,7 +171,13 @@ export function WordSettingsPanel({ html, ready, settings, onChange }: WordSetti
           )}
         </div>
 
-        <WordExportPanel html={html} ready={ready} images={images} settings={document} />
+        <WordExportPanel
+          html={html}
+          ready={ready}
+          images={images}
+          settings={document}
+          fontOverride={getWordPdfFontOverride(settings)}
+        />
       </div>
     </div>
   )

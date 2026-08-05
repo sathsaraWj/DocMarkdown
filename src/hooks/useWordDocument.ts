@@ -8,6 +8,11 @@ import {
   type WordConversionStatus,
   type WordParseResult,
 } from '@/types/word'
+import { TYPOGRAPHY_LIMITS } from '@/types/typography'
+
+function clampBodyFontSize(sizePt: number): number {
+  return Math.min(TYPOGRAPHY_LIMITS.bodyFontSize.max, Math.max(TYPOGRAPHY_LIMITS.bodyFontSize.min, sizePt))
+}
 
 export interface UseWordDocumentResult {
   file: File | null
@@ -85,6 +90,29 @@ export function useWordDocument(): UseWordDocumentResult {
           document: { ...prev.document, metadata: { ...prev.document.metadata, title: result.title as string } },
         }))
       }
+
+      const { page: pageHints, font: fontHints } = result.layoutHints ?? { page: null, font: null }
+      if (pageHints || fontHints) {
+        setSettings((prev) => ({
+          ...prev,
+          detectedFont: fontHints?.fontId ?? prev.detectedFont,
+          document: {
+            ...prev.document,
+            page: pageHints
+              ? {
+                  size: pageHints.size,
+                  orientation: pageHints.orientation,
+                  marginPreset: 'custom',
+                  margins: pageHints.margins,
+                }
+              : prev.document.page,
+            typography: fontHints?.sizePt
+              ? { ...prev.document.typography, bodyFontSize: clampBodyFontSize(fontHints.sizePt) }
+              : prev.document.typography,
+          },
+        }))
+      }
+
       const hasWarnings = result.warnings.length > 0
       setStatus(hasWarnings ? 'ready-with-warnings' : 'ready')
     } catch (err) {

@@ -7,6 +7,8 @@ import { getTemplate } from '@/templates'
 import type { DocumentSettings } from '@/types/settings'
 import { getPageDimensionsMm } from '@/types/page'
 import type { WordConversionStatus } from '@/types/word'
+import type { ContentFontOverride } from '@/styles/documentContentCss'
+import { EMBEDDED_FONT_FACES_CSS } from '@/styles/embeddedFontFaces'
 import { WORD_EXTRA_CONTENT_CSS } from '@/styles/wordContentCss'
 import { mmToPx } from '@/utils/pageMath'
 
@@ -15,6 +17,8 @@ interface WordPreviewProps {
   settings: DocumentSettings
   status: WordConversionStatus
   errorMessage: string | null
+  /** Renders in the source document's detected font instead of the template's generic font bucket — see wordFontOverride.ts. */
+  fontOverride?: ContentFontOverride
 }
 
 /**
@@ -23,7 +27,7 @@ interface WordPreviewProps {
  * Markdown preview, content here is parsed once (not re-rendered on every
  * keystroke), so there's no debounce — only upload/parsing/error states.
  */
-export function WordPreview({ html, settings, status, errorMessage }: WordPreviewProps) {
+export function WordPreview({ html, settings, status, errorMessage, fontOverride }: WordPreviewProps) {
   const template = getTemplate(settings.templateId)
   const { width } = getPageDimensionsMm(settings.page)
   const widthPx = mmToPx(width)
@@ -41,6 +45,7 @@ export function WordPreview({ html, settings, status, errorMessage }: WordPrevie
 
   return (
     <div className="flex h-full min-h-0 flex-col">
+      <style>{EMBEDDED_FONT_FACES_CSS}</style>
       <style>{WORD_EXTRA_CONTENT_CSS}</style>
       <PreviewToolbar
         zoomPercent={zoom * 100}
@@ -95,6 +100,7 @@ export function WordPreview({ html, settings, status, errorMessage }: WordPrevie
                 settings={settings}
                 template={template}
                 onNaturalHeightChange={handleNaturalHeightChange}
+                fontOverride={fontOverride}
               />
             </div>
           </div>

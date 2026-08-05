@@ -5,17 +5,20 @@ import type { DocumentSettings } from '@/types/settings'
 import type { DocumentTemplate } from '@/types/template'
 import type { ExportProgress } from '@/types/export'
 import { buildFilename } from '@/utils/filename'
+import { registerEmbeddedFonts } from './embeddedFonts'
 import { htmlToBlocks } from './htmlToBlocks'
 import { resolveImageDimensions } from './resolveImages'
 import { buildAutoText, resolvePlaceholders } from './headerFooter'
 import { PdfWriter } from './pdfWriter'
-import { buildPdfTheme } from './theme'
+import { buildPdfTheme, type PdfThemeFontOverride } from './theme'
 
 export interface RenderHtmlToPdfInput {
   /** Already-sanitized HTML — callers are responsible for rendering/sanitizing their own source format first. */
   html: string
   settings: DocumentSettings
   template: DocumentTemplate
+  /** Word-only: renders body/heading text in the source document's detected font instead of the generic template font. */
+  fontOverride?: PdfThemeFontOverride
   onProgress?: (progress: ExportProgress) => void
 }
 
@@ -44,6 +47,7 @@ export async function renderHtmlToPdf({
   html,
   settings,
   template,
+  fontOverride,
   onProgress,
 }: RenderHtmlToPdfInput): Promise<RenderHtmlToPdfResult> {
   report(onProgress, { status: 'preparing', message: 'Preparing document…', percent: 15 })
@@ -64,7 +68,9 @@ export async function renderHtmlToPdf({
     compress: true,
   })
 
-  const theme = buildPdfTheme(settings, template)
+  await registerEmbeddedFonts(doc)
+
+  const theme = buildPdfTheme(settings, template, fontOverride)
   const { margins } = settings.page
   const headerReserve = settings.headerFooter.headerEnabled ? 10 : 0
   const footerReserve = settings.headerFooter.footerEnabled ? 10 : 0

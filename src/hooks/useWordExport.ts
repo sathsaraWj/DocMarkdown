@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 
 import { runWordExport } from '@/services/export/wordExportService'
+import type { PdfThemeFontOverride } from '@/services/pdf/theme'
 import type { DocumentSettings } from '@/types/settings'
 import type { DocumentTemplate } from '@/types/template'
 import type { ExportProgress } from '@/types/export'
@@ -18,6 +19,7 @@ export function useWordExport() {
       images: WordImageOptions,
       settings: DocumentSettings,
       template: DocumentTemplate,
+      fontOverride?: PdfThemeFontOverride,
     ) => {
       if (isExporting) return
       setIsExporting(true)
@@ -30,6 +32,7 @@ export function useWordExport() {
         images,
         settings,
         template,
+        fontOverride,
         onProgress: setProgress,
       })
 

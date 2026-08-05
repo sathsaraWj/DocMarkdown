@@ -12,6 +12,12 @@ export const WORD_EXTRA_CONTENT_CSS = `
   .docx-align-center { text-align: center; }
   .docx-align-right { text-align: right; }
   .docx-align-justify { text-align: justify; }
-  .docx-page-break { border: none; border-top: 2px dashed var(--doc-border-color, #cbd5e1); margin: 2rem 0; }
+  .docx-page-break {
+    border: none;
+    border-top: 2px dashed var(--doc-border-color, #cbd5e1);
+    margin: 2rem 0;
+    break-after: page;
+    page-break-after: always;
+  }
   .docx-image-omitted { display: inline-block; font-style: italic; color: var(--doc-muted-color, #6b7280); }
 `

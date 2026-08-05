@@ -31,6 +31,8 @@ export type ContentBlock =
     }
   | { type: 'hr' }
   | { type: 'image'; src: string; alt: string; aspectRatio?: number }
+  /** An explicit forced page break from the source document (e.g. a Word manual page break) — always starts a new page, unlike a plain 'hr'. */
+  | { type: 'page-break' }
 
 export function plainRun(text: string): TextRun {
   return {

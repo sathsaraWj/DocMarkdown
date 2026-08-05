@@ -12,6 +12,7 @@ import { WordUploadZone } from '@/components/word/WordUploadZone'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import { useWordDocument } from '@/hooks/useWordDocument'
+import { getWordContentFontOverride } from '@/services/word/wordFontOverride'
 
 export default function WordToPdfPage() {
   usePageMeta({
@@ -31,6 +32,7 @@ export default function WordToPdfPage() {
   const hasFile = file !== null
   const isReady = status === 'ready' || status === 'ready-with-warnings'
   const isInvalidOrError = status === 'invalid' || status === 'error'
+  const previewFontOverride = getWordContentFontOverride(settings)
 
   useEffect(() => {
     if (isReady) workspaceHeadingRef.current?.focus()
@@ -153,6 +155,7 @@ export default function WordToPdfPage() {
                     settings={settings.document}
                     status={status}
                     errorMessage={errorMessage}
+                    fontOverride={previewFontOverride}
                   />
                 </div>
                 <div className="w-80 shrink-0 border-l border-neutral-200 dark:border-neutral-800">
@@ -172,6 +175,7 @@ export default function WordToPdfPage() {
                     settings={settings.document}
                     status={status}
                     errorMessage={errorMessage}
+                    fontOverride={previewFontOverride}
                   />
                 </div>
                 <WordSettingsPanel

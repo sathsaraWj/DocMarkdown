@@ -1,6 +1,7 @@
 import { DownloadIcon } from '@/components/common/icons'
 import { SectionHeading } from '@/components/settings/fields'
 import { useWordExport } from '@/hooks/useWordExport'
+import type { PdfThemeFontOverride } from '@/services/pdf/theme'
 import { getTemplate } from '@/templates'
 import type { DocumentSettings } from '@/types/settings'
 import type { WordExportFormat, WordImageOptions } from '@/types/word'
@@ -10,6 +11,8 @@ interface WordExportPanelProps {
   ready: boolean
   images: WordImageOptions
   settings: DocumentSettings
+  /** The source .docx's detected font, applied to the PDF export unless "normalize styling" is on. */
+  fontOverride?: PdfThemeFontOverride
 }
 
 const FORMATS: { id: WordExportFormat; label: string; description: string }[] = [
@@ -18,12 +21,12 @@ const FORMATS: { id: WordExportFormat; label: string; description: string }[] = 
   { id: 'text', label: 'Download plain text', description: 'Readable .txt extract' },
 ]
 
-export function WordExportPanel({ html, ready, images, settings }: WordExportPanelProps) {
+export function WordExportPanel({ html, ready, images, settings, fontOverride }: WordExportPanelProps) {
   const { startExport, isExporting, progress, error, clearError } = useWordExport()
 
   const handleExport = (format: WordExportFormat) => {
     const template = getTemplate(settings.templateId)
-    void startExport(format, html, images, settings, template)
+    void startExport(format, html, images, settings, template, fontOverride)
   }
 
   return (

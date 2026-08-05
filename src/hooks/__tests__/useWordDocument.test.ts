@@ -43,6 +43,23 @@ describe('useWordDocument', () => {
     expect(result.current.settings.document.metadata.title).toBe('Sample Report')
   })
 
+  it('applies the source document\'s detected page size and margins automatically', async () => {
+    const { result } = renderHook(() => useWordDocument())
+    await act(async () => {
+      await result.current.loadFile(loadFixture('sample.docx'))
+    })
+    await waitFor(() => {
+      expect(['ready', 'ready-with-warnings']).toContain(result.current.status)
+    })
+
+    expect(result.current.settings.document.page).toEqual({
+      size: 'Letter',
+      orientation: 'portrait',
+      marginPreset: 'custom',
+      margins: { top: 25.4, right: 25.4, bottom: 25.4, left: 25.4 },
+    })
+  })
+
   it('clearDocument resets everything back to idle', async () => {
     const { result } = renderHook(() => useWordDocument())
     await act(async () => {

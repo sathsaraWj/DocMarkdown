@@ -43,6 +43,8 @@ function blockToLines(block: ContentBlock, depth = 0): string[] {
       return ['---', '']
     case 'image':
       return [`[Image: ${block.alt || 'untitled'}]`, '']
+    case 'page-break':
+      return ['']
   }
 }
 

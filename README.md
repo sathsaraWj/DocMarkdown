@@ -132,6 +132,55 @@ and nested unordered lists, tables, hyperlinks, embedded images, basic text
 alignment, and blockquotes (where mammoth can identify them from the source
 document's styles). The UI never claims the result is pixel-perfect.
 
+### Layout fidelity architecture
+
+Getting a browser-rendered PDF to closely match Word's own layout turned out
+to hinge on a few specific, fixable problems rather than needing a different
+rendering approach — the PDF pipeline was already a measurement-based
+HTML→block-model→jsPDF renderer, not a `html2canvas` screenshot. The real
+issues, and what changes:
+
+- **Font metrics were the single biggest source of drift.** jsPDF's built-in
+  core fonts (Helvetica/Times/Courier) use Adobe's standard AFM metrics,
+  which don't match Calibri, Arial, or any other real Word font — so text
+  wrapped differently in the PDF than in Word, which cascades into wrong
+  paragraph heights and wrong page counts. Both the Markdown and Word PDF
+  export paths now embed
+  [Carlito](https://fonts.google.com/specimen/Carlito),
+  [Caladea](https://fonts.google.com/specimen/Caladea),
+  [Arimo](https://fonts.google.com/specimen/Arimo),
+  [Tinos](https://fonts.google.com/specimen/Tinos), and
+  [Cousine](https://fonts.google.com/specimen/Cousine) — free, OFL-licensed
+  fonts specifically designed to be **metric-compatible** with Calibri,
+  Cambria, Arial, Times New Roman, and Courier New respectively (same
+  character widths and line breaks, different glyph shapes). A detected
+  Word font (see below) maps to the closest of these five
+  (`services/pdf/fontMetrics.ts`); unknown/unmapped fonts (Georgia, Verdana,
+  Segoe UI, Aptos, ...) fall back to the nearest category, disclosed as an
+  approximation. The same font files back the live preview via `@font-face`
+  (`styles/embeddedFontFaces.ts`), so preview and PDF measure text
+  identically instead of using two different font systems.
+- **The source document's own page size, margins, and default font were
+  never read at all** — the Word converter always fell back to
+  DocMarkdown's generic A4/Normal-margins/11pt defaults. `services/word/
+  parseDocxLayout.ts` now reads the `.docx`'s own `word/document.xml`
+  (`<w:sectPr>`) and `word/styles.xml` directly via `jszip` — independent of
+  mammoth, which exposes neither — and `useWordDocument.ts` applies the
+  detected page size/margins/orientation and dominant font/size
+  automatically on load (snapped to the closest of A4/Letter/Legal/A5;
+  margins apply exactly). This alone accounts for most cases of "one Word
+  page becomes two PDF pages."
+- **Explicit Word page breaks were silently dropped.** mammoth's style map
+  already converted a manual page break into `<hr class="docx-page-break">`,
+  but the PDF block parser treated every `<hr>` identically, so the forced
+  break just became a horizontal line. `services/pdf/blocks.ts` now has a
+  dedicated `page-break` block type, detected in `htmlToBlocks.ts` and
+  honored as a real forced page turn in `pdfWriter.ts`.
+- **Headings could be stranded alone at the bottom of a page.** `PdfWriter.
+  drawHeading` now reserves room for the heading plus at least one line of
+  whatever follows before committing to draw it on the current page, moving
+  it to a fresh page instead of orphaning it.
+
 ## Merge PDF tool
 
 `/merge-pdf` combines multiple PDF files into one, in whatever order you
@@ -234,10 +283,12 @@ preserve:
 | Routing                | React Router 7 (lazy-loaded secondary routes)                                            |
 | Markdown parsing       | Marked, with a custom renderer for heading IDs/TOC/numbering and syntax highlighting     |
 | Word (.docx) parsing   | [mammoth](https://github.com/mtingers/mammoth.js) (browser build), DOCX XML → HTML       |
+| DOCX page/font detection | [jszip](https://github.com/Stuk/jszip) — reads `sectPr`/`styles.xml` directly for layout fidelity |
 | PDF merging/inspection | [pdf-lib](https://github.com/Hopding/pdf-lib) — page copying, metadata, encryption check |
 | Sanitization           | DOMPurify (every render path, no exceptions)                                             |
 | Syntax highlighting    | highlight.js (core + a curated language set)                                             |
 | PDF generation         | jsPDF, driven by a hand-built layout engine (see below) — no `html2canvas` rasterization |
+| Metric-compatible fonts | [Carlito/Caladea/Arimo/Tinos/Cousine](https://fonts.google.com/) via `@fontsource`, embedded in PDF export and the live preview for layout fidelity (see [Layout fidelity architecture](#layout-fidelity-architecture)) |
 | Local persistence      | `localStorage`, versioned schema                                                         |
 | Unit/component testing | Vitest + React Testing Library                                                           |
 | E2E testing            | Playwright                                                                               |
@@ -295,6 +346,27 @@ for image re-compression), PDF/HTML/text export builders, the upload zone
 panel, the export panel, the settings panel (normalize-styling and
 image-options visibility toggling), and page-level replace/clear/`.doc`-
 rejection flows using a hand-built fixture `.docx`.
+
+For Word-to-PDF **layout fidelity** specifically (`parseDocxLayout.test.ts`,
+`fontMetrics.test.ts`, `embeddedFonts.test.ts`, `htmlToBlocks.test.ts`,
+`pdfWriter.test.ts`, `wordLayoutFidelity.test.ts`): DOCX page-size/margin/
+orientation extraction from hand-built in-memory `.docx` archives (via
+`jszip`, no fixture files needed), per-field fallback from a paragraph style
+to `docDefaults` when only one is redeclared, page-size-to-preset snapping,
+DOCX→embedded-font name mapping, that every embedded font file decodes to
+valid TrueType data and is actually usable by jsPDF for text measurement,
+that an explicit Word page break survives HTML5's parser auto-closing an
+open `<p>` before a block-level `<hr>` (the exact shape mammoth produces) and
+still forces a real new page rather than becoming a horizontal rule, and
+heading-orphan protection (a heading with only a sliver of space left is
+pushed to a fresh page; one with room stays put; the very first heading of a
+document never gets a spurious blank page before it). A dedicated
+`e2e/fixtures/multi-page.docx` fixture (headings, an explicit page break, a
+table, an inline image, and a `styles.xml` declaring Calibri 11pt — built
+reproducibly via `scripts/generate-word-fixtures.mjs`) is run through the
+*entire* real pipeline end-to-end: parsed, exported, and the resulting PDF
+re-opened with `pdf-lib` to assert its actual page count and page size
+match what the source document specifies.
 
 For the Merge PDF tool, unit/component coverage additionally includes: PDF
 file validation (extension/MIME/empty/individual-size checks), batch-level
@@ -564,12 +636,17 @@ src/
   services/
     markdown/       Marked configuration, footnotes, sanitize, plain-text
     word/           DOCX validation, mammoth parsing, HTML sanitization,
-                    plain-text extraction, image include/compress handling
+                    plain-text extraction, image include/compress handling,
+                    raw-XML page/font detection (parseDocxLayout.ts), and the
+                    normalize-styling-aware font override (wordFontOverride.ts)
     pdf/            Block model, HTML->block parser, shared jsPDF layout
                     engine (`renderHtmlToPdf`) used by the Markdown/Word
                     converters, plus the Merge PDF engine (pdf-lib-based
                     inspection, page-range parsing, merging, output-filename
-                    sanitizing, and resource cleanup)
+                    sanitizing, and resource cleanup); fontMetrics.ts +
+                    embeddedFonts.ts (+ the generated embeddedFonts.generated.ts)
+                    provide the metric-compatible fonts embedded in every
+                    exported PDF for layout fidelity
     export/         HTML/Markdown/text export builders + orchestration for
                     both Markdown and Word documents
     storage/        Versioned localStorage persistence + settings JSON I/O,
@@ -580,11 +657,18 @@ src/
                    word, mergePdf, ...)
   utils/           Small pure helpers (filename sanitizing, color, text,
                    generic array reorder, ...)
-  styles/          Shared document content CSS (used by preview + HTML export)
+  styles/          Shared document content CSS (used by preview + HTML export);
+                   embeddedFontFaces.ts declares the same metric-compatible
+                   fonts as @font-face for the live preview, via `?url`
+                   imports of the @fontsource woff2 files
 e2e/               Playwright specs
   fixtures/         Small hand-built/generated .docx/.doc/.pdf fixtures used
                     by Word to PDF and Merge PDF unit + e2e tests (no
                     real-world/copyrighted content)
+scripts/           One-off generator scripts for committed fixtures/assets —
+                   rerun after changing what they generate:
+                   generate-word-fixtures.mjs, generate-merge-pdf-fixtures.mjs,
+                   generate-embedded-pdf-fonts.mjs
 ```
 
 ### Main pages
@@ -640,6 +724,26 @@ e2e/               Playwright specs
   modifies the document, which necessarily invalidates any existing digital
   signature; merge the unsigned source instead if you need to re-sign
   afterward.
+- **The exported Word-to-PDF layout still doesn't exactly match Word.** Some
+  drift is unavoidable in a browser-based renderer (see
+  [Layout fidelity architecture](#layout-fidelity-architecture)) — glyph
+  shapes differ slightly even between metric-compatible fonts, and a handful
+  of DOCX features (multi-column sections, floating/wrapped images, text
+  boxes, headers/footers, tracked changes) aren't reproduced at all. If a
+  specific document looks noticeably worse than expected, check the
+  conversion-warnings panel first; if the font shown there seems wrong,
+  the document may use a font outside the mapping table in
+  `services/pdf/fontMetrics.ts`, which falls back to a generic sans-serif
+  approximation.
+- **Vitest can't resolve `@fontsource/*` `?url` imports, or the embedded-fonts
+  test is slow.** `styles/embeddedFontFaces.ts` imports raw `.woff2` files
+  from `node_modules/@fontsource/*` with Vite's `?url` suffix, which needs no
+  special config (Vite's client types cover it) — if this breaks after a
+  dependency upgrade, confirm the five `@fontsource/*` packages are still
+  installed. `services/pdf/embeddedFonts.generated.ts` is a large (~1.2MB)
+  generated file consumed via a dynamic `import()`, so the first test that
+  touches PDF export in a given worker process pays a one-time decode cost —
+  expected, not a bug.
 
 ## Future improvement ideas
 
@@ -649,6 +753,28 @@ e2e/               Playwright specs
   links, matching the same future work already planned for Markdown (below)
 - Word to PDF: an opt-in, best-effort mapping of DOCX section/multi-column
   layout into the PDF output, clearly labeled as approximate
+- Word to PDF: extracting each inline image's real display size from the
+  DOCX's own `wp:extent` (currently images always render at full content
+  width, scaled by aspect ratio) — deferred because correlating XML drawing
+  order to mammoth's emitted `<img>` order reliably (especially when an
+  image mammoth can't process is silently dropped, shifting the count) needs
+  more validation than this pass had room for; a safe version would only
+  apply extracted sizes when the two counts match exactly and fall back to
+  today's behavior otherwise
+- Word to PDF: reading real DOCX table column widths (`w:tblGrid`) instead of
+  splitting columns evenly, and reading header/footer text from
+  `word/header*.xml`/`word/footer*.xml` (mammoth doesn't process either) to
+  pre-fill the existing header/footer settings fields
+- Word to PDF: per-run font/size/color fidelity — mammoth intentionally
+  discards direct character formatting by design, so only the document's one
+  dominant/default font and size are currently detected and applied; getting
+  per-run fidelity would mean parsing `word/document.xml`'s run properties
+  directly instead of going through mammoth for formatting (still using it
+  for structure), a substantially larger undertaking
+- Word to PDF: multi-section documents (different page size/margins/
+  orientation partway through one .docx) currently apply only the last
+  section's geometry to the whole export — the same simplification already
+  disclosed for "section-specific margins" in the formatting-limitations list
 - Merge PDF: an opt-in bookmark/outline builder derived from each source
   file's own top-level headings or filenames, since bookmarks aren't
   currently carried over from the source PDFs

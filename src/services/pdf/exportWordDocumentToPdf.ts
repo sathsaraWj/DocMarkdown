@@ -4,6 +4,7 @@ import type { DocumentTemplate } from '@/types/template'
 import type { ExportProgress } from '@/types/export'
 import type { WordImageOptions } from '@/types/word'
 import { renderHtmlToPdf, type RenderHtmlToPdfResult } from './renderHtmlToPdf'
+import type { PdfThemeFontOverride } from './theme'
 
 export interface WordPdfExportInput {
   /** Already-sanitized HTML produced by services/word/parseDocx.ts. */
@@ -11,6 +12,8 @@ export interface WordPdfExportInput {
   images: WordImageOptions
   settings: DocumentSettings
   template: DocumentTemplate
+  /** The source .docx's detected dominant font, applied unless the user opted into "normalize styling." */
+  fontOverride?: PdfThemeFontOverride
   onProgress?: (progress: ExportProgress) => void
 }
 
@@ -27,10 +30,11 @@ export async function exportWordDocumentToPdf({
   images,
   settings,
   template,
+  fontOverride,
   onProgress,
 }: WordPdfExportInput): Promise<WordPdfExportResult> {
   onProgress?.({ status: 'preparing', message: 'Preparing images…', percent: 5 })
   const processedHtml = await applyWordImageOptions(html, images)
 
-  return renderHtmlToPdf({ html: processedHtml, settings, template, onProgress })
+  return renderHtmlToPdf({ html: processedHtml, settings, template, fontOverride, onProgress })
 }

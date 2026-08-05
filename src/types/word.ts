@@ -1,3 +1,5 @@
+import type { EmbeddedFontId } from '@/services/pdf/fontMetrics'
+import type { Margins, Orientation, PageSize } from './page'
 import { DEFAULT_DOCUMENT_SETTINGS, type DocumentSettings } from './settings'
 
 export type WordFileErrorCode =
@@ -20,6 +22,28 @@ export interface WordParseMessage {
   message: string
 }
 
+/**
+ * Page geometry and dominant typography read directly from the .docx's own
+ * XML (section properties + styles.xml) — independent of mammoth, which
+ * doesn't expose either. Used to make the converted document's page
+ * size/margins/font match the source instead of DocMarkdown's generic
+ * defaults. Any field can be null if it couldn't be determined; extraction
+ * never fails the overall conversion.
+ */
+export interface DocxLayoutHints {
+  page: {
+    size: PageSize
+    orientation: Orientation
+    margins: Margins
+  } | null
+  font: {
+    fontId: EmbeddedFontId
+    /** The raw font name as declared in the docx, kept for disclosure/debugging (e.g. "Calibri"). */
+    sourceName: string
+    sizePt: number | null
+  } | null
+}
+
 export interface WordParseResult {
   /** Sanitized HTML, safe to render via dangerouslySetInnerHTML. */
   html: string
@@ -28,6 +52,8 @@ export interface WordParseResult {
   title: string | null
   /** Number of images found in the source document (before any include/exclude filtering). */
   imageCount: number
+  /** Page/font hints read from the docx's own XML — see DocxLayoutHints. */
+  layoutHints: DocxLayoutHints | null
 }
 
 export type WordExportFormat = 'pdf' | 'html' | 'text'
@@ -59,15 +85,18 @@ export const WORD_IMAGE_QUALITY_LIMITS = { min: 0.3, max: 1 } as const
 export interface WordConversionSettings {
   /** Page, typography, metadata, header/footer, content, and template — reused wholesale from the Markdown converter. */
   document: DocumentSettings
-  /** When true, the selected DocMarkdown template's typography/colors are applied instead of a neutral default rendering. */
+  /** When true, the selected DocMarkdown template's typography/colors are applied instead of the extracted look. */
   normalizeStyling: boolean
   images: WordImageOptions
+  /** The source .docx's dominant font, detected from its XML — see DocxLayoutHints. Ignored when normalizeStyling is on. */
+  detectedFont: EmbeddedFontId | null
 }
 
 export const DEFAULT_WORD_CONVERSION_SETTINGS: WordConversionSettings = {
   document: DEFAULT_DOCUMENT_SETTINGS,
   normalizeStyling: false,
   images: DEFAULT_WORD_IMAGE_OPTIONS,
+  detectedFont: null,
 }
 
 /** Formatting features Word supports that browser-based conversion cannot faithfully reproduce. */
