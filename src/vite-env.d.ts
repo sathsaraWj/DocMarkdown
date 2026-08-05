@@ -6,6 +6,9 @@ interface ImportMetaEnv {
   readonly VITE_ENABLE_ANALYTICS?: string
   readonly VITE_MAX_UPLOAD_SIZE_MB?: string
   readonly VITE_MAX_WORD_UPLOAD_SIZE_MB?: string
+  readonly VITE_MAX_MERGE_PDF_FILES?: string
+  readonly VITE_MAX_MERGE_PDF_FILE_SIZE_MB?: string
+  readonly VITE_MAX_MERGE_PDF_COMBINED_SIZE_MB?: string
 }
 
 interface ImportMeta {

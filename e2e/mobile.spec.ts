@@ -43,3 +43,26 @@ test('the Word to PDF converter is usable on a mobile viewport', async ({ page }
   await expect(page.getByText('Conversion settings')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Page' })).toBeVisible()
 })
+
+test('the Merge PDF tool is usable on a mobile viewport, including reordering', async ({ page }) => {
+  await page.goto('/merge-pdf')
+
+  await expect(page.getByRole('heading', { level: 1, name: /merge pdf files/i })).toBeVisible()
+
+  const fileChooserPromise = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: 'Browse files', exact: true }).click()
+  const fileChooser = await fileChooserPromise
+  await fileChooser.setFiles([
+    path.join(import.meta.dirname, 'fixtures', 'pdf-single-page.pdf'),
+    path.join(import.meta.dirname, 'fixtures', 'pdf-multi-page.pdf'),
+  ])
+
+  await expect(page.getByText('pdf-single-page.pdf')).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByText('pdf-multi-page.pdf')).toBeVisible()
+
+  await page.getByRole('button', { name: /move pdf-single-page\.pdf down/i }).click()
+  const items = page.getByRole('listitem')
+  await expect(items.nth(0)).toContainText('pdf-multi-page.pdf')
+
+  await expect(page.getByRole('button', { name: /merge pdfs/i })).toBeVisible()
+})

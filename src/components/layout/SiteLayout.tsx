@@ -3,7 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { Footer } from './Footer'
 import { Header } from './Header'
 
-const WORKSPACE_ROUTES = new Set(['/', '/word-to-pdf'])
+const WORKSPACE_ROUTES = new Set(['/', '/word-to-pdf', '/merge-pdf'])
 
 export function SiteLayout() {
   const location = useLocation()

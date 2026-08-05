@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-import { FileTextIcon, LockIcon, UploadIcon } from '@/components/common/icons'
+import { FileTextIcon, LayersIcon, LockIcon, UploadIcon } from '@/components/common/icons'
 
 interface HeroProps {
   onStartWriting: () => void
@@ -19,15 +19,27 @@ export function Hero({ onStartWriting, onUploadClick }: HeroProps) {
             Write or paste Markdown and export polished PDF, HTML, or text documents — directly in
             your browser. Your documents never leave your device.
           </p>
-          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-            Have a Word document instead?{' '}
-            <Link
-              to="/word-to-pdf"
-              className="inline-flex items-center gap-1 font-medium text-accent-600 underline underline-offset-2 hover:text-accent-700 dark:text-accent-400"
-            >
-              <FileTextIcon className="h-3.5 w-3.5" />
-              Convert Word to PDF
-            </Link>
+          <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-neutral-500 dark:text-neutral-400">
+            <span className="flex items-center gap-1">
+              Have a Word document instead?{' '}
+              <Link
+                to="/word-to-pdf"
+                className="inline-flex items-center gap-1 font-medium text-accent-600 underline underline-offset-2 hover:text-accent-700 dark:text-accent-400"
+              >
+                <FileTextIcon className="h-3.5 w-3.5" />
+                Convert Word to PDF
+              </Link>
+            </span>
+            <span className="flex items-center gap-1">
+              Have several PDFs to combine?{' '}
+              <Link
+                to="/merge-pdf"
+                className="inline-flex items-center gap-1 font-medium text-accent-600 underline underline-offset-2 hover:text-accent-700 dark:text-accent-400"
+              >
+                <LayersIcon className="h-3.5 w-3.5" />
+                Merge PDF files
+              </Link>
+            </span>
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">

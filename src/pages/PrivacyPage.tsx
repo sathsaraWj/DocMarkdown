@@ -57,6 +57,22 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
+            Merging PDFs also stays on your device
+          </h2>
+          <p className="mt-2">
+            The Merge PDF tool reads your selected <code>.pdf</code> files and combines them into a
+            single document entirely in your browser's memory using a local JavaScript library
+            (pdf-lib) — no file is uploaded to a server, sent to a third-party conversion API, or
+            transmitted anywhere. Files disappear the moment you refresh the page, clear the
+            selection, or navigate away; DocMarkdown does not save your raw PDF files. Only a
+            handful of small, non-sensitive preferences — your last-used output filename and
+            metadata fields — are remembered in local storage so you don't have to retype them next
+            time; the PDF files themselves are never included in that.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
             Drafts and settings are stored only in your browser
           </h2>
           <p className="mt-2">
