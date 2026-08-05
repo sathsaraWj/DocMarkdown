@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://sathsarawj.github.io/DocMarkdown/sitemap.xml
+Sitemap: https://docmarkdown.com/sitemap.xml
