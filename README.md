@@ -173,15 +173,27 @@ run `vercel deploy`.
 
 ### GitHub Pages
 
-1. `npm run build` (the `postbuild` script copies `index.html` to `404.html`
-   inside `dist/` so deep links resolve correctly on Pages, which has no
-   native SPA fallback).
-2. Publish the `dist/` folder to the `gh-pages` branch, or use the included
-   `.github/workflows/deploy-pages.yml` Actions workflow, which builds and
-   deploys via the official `actions/deploy-pages` action on every push to
-   `main`.
-3. If you deploy under a repository subpath (`username.github.io/repo`), set
-   Vite's `base` option in `vite.config.ts` to `/repo/` before building.
+The included `.github/workflows/deploy-pages.yml` Actions workflow builds and
+deploys automatically on every push to `main` via the official
+`actions/deploy-pages` action. It uses `actions/configure-pages` to detect
+whether the site is a user/org page (served from `/`) or a project page
+(served from `/<repo-name>/`), and passes that as `VITE_BASE_PATH` /
+`VITE_SITE_URL` to the build — so asset paths and the React Router
+`basename` (`src/app/App.tsx`, via `import.meta.env.BASE_URL`) resolve
+correctly either way, with no manual editing required.
+
+**One-time setup:** in the repository's **Settings → Pages**, set **Source**
+to **GitHub Actions** (this can't be done from the CLI/repo files — it's a
+per-repository toggle in the GitHub UI). After that, every push to `main`
+deploys automatically; you can also trigger it manually from the **Actions**
+tab (`workflow_dispatch`).
+
+The `postbuild` script additionally copies `dist/index.html` to
+`dist/404.html`, so deep links (e.g. a bookmark to `/templates`) resolve
+correctly even though Pages has no native SPA fallback.
+
+If you deploy to a `gh-pages` branch by hand instead of via Actions, set
+`VITE_BASE_PATH=/<repo-name>/` when running `npm run build`.
 
 ## Environment variables
 

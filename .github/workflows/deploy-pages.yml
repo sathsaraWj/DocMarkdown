@@ -23,11 +23,17 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - id: pages
+        uses: actions/configure-pages@v5
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
+        env:
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          VITE_SITE_URL: ${{ steps.pages.outputs.base_url }}
+          VITE_GITHUB_URL: https://github.com/${{ github.repository }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

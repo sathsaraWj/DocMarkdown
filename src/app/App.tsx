@@ -6,7 +6,7 @@ import { AppRouter } from './router'
 function App() {
   return (
     <DocumentProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <AppRouter />
       </BrowserRouter>
     </DocumentProvider>
