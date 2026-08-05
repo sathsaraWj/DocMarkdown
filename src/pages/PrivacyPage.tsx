@@ -79,9 +79,41 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Analytics</h2>
           <p className="mt-2">
-            Third-party analytics are not enabled by default. If a future deployment of this project
+            No first-party analytics are enabled by default. If a future deployment of this project
             enables a privacy-friendly analytics provider, that will be reflected in this policy and
             gated behind an explicit configuration flag, not enabled silently.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Advertising</h2>
+          <p className="mt-2">
+            This site uses Google AdSense to display ads. AdSense may set cookies or use similar
+            technologies in your browser, collect information such as your IP address and device
+            type, and use that information (including data from other sites you've visited) to show
+            ads it thinks are relevant to you. This is separate from, and unrelated to, your Markdown
+            content — AdSense has no access to what you write or export.
+          </p>
+          <p className="mt-2">
+            You can learn more about how Google uses data from sites that use its services at{' '}
+            <a
+              href="https://policies.google.com/technologies/partner-sites"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent-600 underline dark:text-accent-400"
+            >
+              How Google uses information from sites that use our services
+            </a>
+            , and you can opt out of personalized advertising at{' '}
+            <a
+              href="https://adssettings.google.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent-600 underline dark:text-accent-400"
+            >
+              Google Ads Settings
+            </a>
+            .
           </p>
         </section>
 

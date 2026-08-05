@@ -223,20 +223,26 @@ optional with a safe default.
   `sanitizeHtml()` (DOMPurify), which also forces
   `rel="noopener noreferrer nofollow"` and `target="_blank"` on external
   links.
-- **No remote fonts, no third-party scripts.** Typography uses bundled/
-  system font stacks; PDF export uses jsPDF's built-in core fonts
-  (Helvetica/Times/Courier), so nothing needs to be fetched or embedded.
-- **No analytics by default.** See [Environment variables](#environment-variables) —
-  analytics stays fully disabled unless a deployer opts in, and even then no
-  provider is implemented out of the box.
+- **No remote fonts.** Typography uses bundled/system font stacks; PDF export
+  uses jsPDF's built-in core fonts (Helvetica/Times/Courier), so nothing needs
+  to be fetched or embedded.
+- **No first-party analytics by default.** See [Environment variables](#environment-variables) —
+  the analytics abstraction stays fully disabled unless a deployer opts in,
+  and even then no provider is implemented out of the box.
+- **Google AdSense.** The deployed site (`index.html`) loads the AdSense
+  script (`pagead2.googlesyndication.com`) to display ads. This is unrelated
+  to document processing — your Markdown content still never leaves your
+  browser — but it is a third-party script that can set cookies for ad
+  personalization. Disclosed on `/privacy`; remove the `<script>` tag from
+  `index.html` if you don't want ads in your own deployment.
 
 See `/privacy` in the running app for the user-facing version of this policy.
 
 ### Content Security Policy guidance
 
-DocMarkdown ships no CSP header itself (that's host-specific), but because it
-makes no network requests for document processing and loads no third-party
-scripts, a strict policy is easy to apply at your host/CDN, for example:
+DocMarkdown ships no CSP header itself (that's host-specific). Document
+processing itself makes no network requests, so if you remove the AdSense
+script (see above), a strict policy is easy to apply at your host/CDN:
 
 ```
 Content-Security-Policy:
@@ -249,6 +255,12 @@ Content-Security-Policy:
   base-uri 'self';
   frame-ancestors 'none';
 ```
+
+With the AdSense script left in place, `script-src`/`connect-src`/`img-src`
+need to additionally allow Google's ad domains (at minimum
+`*.googlesyndication.com` and `*.doubleclick.net`; see
+[Google's AdSense CSP guidance](https://support.google.com/adsense/answer/10399474)
+for the current list).
 
 (`style-src 'unsafe-inline'` is needed because generated document CSS and the
 standalone HTML export are injected as inline `<style>` tags; this could be
