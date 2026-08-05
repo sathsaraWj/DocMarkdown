@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 
-import { GitHubIcon, MenuIcon } from '@/components/common/icons'
-import { GITHUB_URL } from '@/utils/env'
+import { MenuIcon } from '@/components/common/icons'
 import { Logo } from './Logo'
 import { MobileNav } from './MobileNav'
 import { ThemeSwitcher } from './ThemeSwitcher'
@@ -36,15 +35,6 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <a
-            href={GITHUB_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="DocMarkdown on GitHub"
-            className="hidden h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white sm:flex"
-          >
-            <GitHubIcon className="h-5 w-5" />
-          </a>
           <div className="hidden sm:block">
             <ThemeSwitcher />
           </div>

@@ -1,8 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
 
-import { CloseIcon, GitHubIcon } from '@/components/common/icons'
-import { GITHUB_URL } from '@/utils/env'
+import { CloseIcon } from '@/components/common/icons'
 import { ThemeSwitcher } from './ThemeSwitcher'
 import { NAV_LINKS } from './navLinks'
 
@@ -59,14 +58,6 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
             </NavLink>
           ))}
         </nav>
-        <a
-          href={GITHUB_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-base font-medium text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
-        >
-          <GitHubIcon className="h-5 w-5" /> GitHub
-        </a>
         <div className="mt-auto flex items-center justify-between border-t border-neutral-200 pt-4 dark:border-neutral-800">
           <span className="text-sm text-neutral-500 dark:text-neutral-400">Theme</span>
           <ThemeSwitcher />
