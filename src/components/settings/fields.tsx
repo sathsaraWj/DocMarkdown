@@ -160,3 +160,32 @@ export function SectionHeading({ children }: { children: ReactNode }) {
     <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">{children}</h3>
   )
 }
+
+interface ColorFieldProps {
+  label: string
+  value: string
+  onChange: (value: string) => void
+}
+
+export function ColorField({ label, value, onChange }: ColorFieldProps) {
+  const id = useId()
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
+        {label}
+      </label>
+      <div className="flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-2 py-1 dark:border-neutral-700 dark:bg-neutral-900">
+        <input
+          id={id}
+          type="color"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-6 w-8 shrink-0 cursor-pointer rounded border-0 bg-transparent p-0"
+        />
+        <span className="font-mono text-xs uppercase text-neutral-500 dark:text-neutral-400">
+          {value}
+        </span>
+      </div>
+    </div>
+  )
+}

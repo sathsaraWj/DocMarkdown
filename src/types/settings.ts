@@ -1,3 +1,4 @@
+import type { ColorOverrides } from './colors'
 import { DEFAULT_CONTENT_OPTIONS, type ContentOptions } from './contentOptions'
 import { DEFAULT_METADATA, type DocumentMetadata } from './document'
 import { DEFAULT_HEADER_FOOTER, type HeaderFooterSettings } from './headerFooter'
@@ -14,6 +15,8 @@ export interface DocumentSettings {
   metadata: DocumentMetadata
   headerFooter: HeaderFooterSettings
   content: ContentOptions
+  /** Per-document color overrides on top of the selected template's fixed palette; unset keys fall back to the template. */
+  colors: ColorOverrides
 }
 
 export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
@@ -23,4 +26,5 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   metadata: DEFAULT_METADATA,
   headerFooter: DEFAULT_HEADER_FOOTER,
   content: DEFAULT_CONTENT_OPTIONS,
+  colors: {},
 }

@@ -1,4 +1,5 @@
 import { renderMarkdown } from '@/services/markdown'
+import { resolveMermaidForStaticExport } from '@/services/markdown/mermaid'
 import type { DocumentSettings } from '@/types/settings'
 import type { DocumentTemplate } from '@/types/template'
 import { buildContentCss } from '@/styles/documentContentCss'
@@ -48,15 +49,16 @@ function buildMetaFooter(settings: DocumentSettings): string {
  * Builds a fully self-contained HTML file: sanitized content, embedded CSS,
  * and no script or external dependency of any kind.
  */
-export function buildStandaloneHtml(
+export async function buildStandaloneHtml(
   markdown: string,
   settings: DocumentSettings,
   template: DocumentTemplate,
-): HtmlExportResult {
-  const { html, toc } = renderMarkdown(markdown, {
+): Promise<HtmlExportResult> {
+  const { html: rawHtml, toc } = renderMarkdown(markdown, {
     headingNumbering: settings.content.headingNumbering,
     generateToc: settings.content.generateToc,
   })
+  const html = await resolveMermaidForStaticExport(rawHtml)
 
   const title = settings.metadata.title || 'Untitled Document'
   const description = settings.metadata.subject || 'Document exported from DocMarkdown'

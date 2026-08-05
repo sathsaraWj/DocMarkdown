@@ -8,7 +8,7 @@ const CONTACT_EMAIL = 'hello@docmarkdown.app'
 export default function ContactPage() {
   usePageMeta({
     title: 'Contact',
-    description: 'Get in touch about DocMarkdown, the privacy-focused Markdown to PDF converter.',
+    description: 'Get in touch about DocMarkdown, the privacy-focused Markdown document studio.',
     path: '/contact',
   })
 

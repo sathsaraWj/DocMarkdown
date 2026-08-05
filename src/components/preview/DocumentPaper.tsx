@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
+import { hydrateMermaidDiagrams } from '@/services/markdown/mermaid'
 import { getPageDimensionsMm } from '@/types/page'
 import type { DocumentSettings } from '@/types/settings'
 import type { DocumentTemplate } from '@/types/template'
@@ -59,6 +60,12 @@ export function DocumentPaper({
     observer.observe(node)
     return () => observer.disconnect()
   }, [])
+
+  useEffect(() => {
+    const node = contentRef.current
+    if (!node) return
+    void hydrateMermaidDiagrams(node)
+  }, [html])
 
   const pageContentHeightPx = heightPx - marginTopPx - marginBottomPx
   const pageCount =

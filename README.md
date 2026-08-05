@@ -1,13 +1,16 @@
 # DocMarkdown
 
-**Convert Markdown — and now Word documents — into clean, professional PDFs directly in your browser. Your documents never leave your device.**
+**A Markdown document studio that runs entirely in your browser — write Markdown, export polished PDF, DOCX, HTML, or plain-text documents. Your documents never leave your device.**
 
-DocMarkdown is a privacy-focused, fully client-side document-to-PDF converter.
-Write or paste Markdown, watch a live paginated preview update as you type,
-choose from five document templates, tune page/typography/header/footer
-settings, and export to **PDF**, standalone **HTML**, **Markdown**, or **plain
-text** — all without a network request. There is no backend, no account, and
-no document upload step, because there is nowhere for your document to go.
+DocMarkdown is a privacy-focused, fully client-side Markdown editor. Write or
+paste Markdown in a full CodeMirror 6 code-editor experience, watch a live
+paginated preview render tables, syntax-highlighted code, Mermaid diagrams,
+and KaTeX math as you type, choose from five document templates (with
+optional custom color overrides), tune page/typography/header/footer
+settings, and export to **PDF**, **DOCX**, standalone **HTML**, **Markdown**,
+or **plain text** — or print directly — all without a network request. There
+is no backend, no account, and no document upload step, because there is
+nowhere for your document to go.
 
 DocMarkdown also includes a **Word to PDF Converter** (`/word-to-pdf`): drop
 in a `.docx` file and it's parsed, previewed, and exported entirely in the
@@ -19,6 +22,7 @@ you choose, entirely in your browser.
 
 - [Product overview](#product-overview)
 - [Feature list](#feature-list)
+- [Markdown editor architecture](#markdown-editor-architecture)
 - [Word to PDF converter](#word-to-pdf-converter)
 - [Merge PDF tool](#merge-pdf-tool)
 - [Technology stack](#technology-stack)
@@ -30,6 +34,7 @@ you choose, entirely in your browser.
 - [Environment variables](#environment-variables)
 - [Privacy architecture](#privacy-architecture)
 - [Export limitations](#export-limitations)
+- [Beautify Markdown limitations](#beautify-markdown-limitations)
 - [Browser support](#browser-support)
 - [Project structure](#project-structure)
 - [Troubleshooting](#troubleshooting)
@@ -38,43 +43,157 @@ you choose, entirely in your browser.
 ## Product overview
 
 DocMarkdown targets writers and developers who want to turn Markdown (a
-README, a set of notes, a resume, a report) into a polished document without
-uploading it anywhere. Everything — Markdown parsing, HTML sanitization,
-syntax highlighting, and PDF layout — runs in the browser's JavaScript engine.
+README, a set of notes, a resume, a report, an AI-generated response) into a
+polished document without uploading it anywhere. Everything — the editor,
+Markdown parsing, HTML sanitization, syntax highlighting, diagram/math
+rendering, and PDF/DOCX layout — runs in the browser's JavaScript engine.
 
 ## Feature list
 
-- Real-time Markdown editor with line numbers, tab indentation, formatting
-  toolbar, word/character counts, reading time estimate, and keyboard
-  shortcuts (Ctrl/Cmd+B, +I, +K, Tab/Shift+Tab)
-- Drag-and-drop or click-to-browse upload of `.md`/`.txt` files, with file
-  type and size validation
-- Live, paginated preview with paper-boundary rendering for A4, Letter,
-  Legal, and A5 in portrait or landscape, zoom controls, fit-to-width, and
-  approximate page-break indicators
+- **CodeMirror 6 editor**: line numbers, current-line highlighting,
+  Markdown syntax highlighting, bracket matching/auto-closing, tab and
+  multi-line indentation, find and replace, full undo/redo history,
+  soft-wrap and spellcheck toggles, a distraction-free full-screen writing
+  mode, word/character counts, reading-time estimate, cursor line/column,
+  and local draft recovery
+- **Compact formatting toolbar** (horizontally scrollable on narrow
+  screens): bold, italic, underline, strikethrough, headings 1–3,
+  blockquote, inline code, code block, link, image, ordered/unordered/
+  checklist lists, table, horizontal rule, page break, Mermaid diagram, math
+  block, and footnote — each intelligently wraps a selection or inserts a
+  usable placeholder with the cursor positioned for immediate typing
+- **Keyboard shortcuts**: Ctrl/Cmd+B (bold), +I (italic), +K (link),
+  +Shift+7 (ordered list), +Shift+8 (unordered list), +S (stops the
+  browser's native save dialog — autosave already runs continuously),
+  +Enter (open preview), +Shift+P (open the export menu) — layered on top
+  of CodeMirror's own defaults without overriding essential browser/
+  accessibility shortcuts
+- **Live, sanitized preview**: headings, paragraphs, emphasis, nested/task
+  lists, tables, links, images, blockquotes, inline/fenced code with
+  syntax highlighting, horizontal rules, footnotes, explicit page breaks,
+  **Mermaid diagrams**, and **KaTeX math** (block `$$...$$` and inline
+  `$...$`, using the same disambiguation heuristic as Pandoc so plain
+  prose like "$5 and $10" is never misread as math) — every render path is
+  sanitized through DOMPurify before touching the DOM, with a
+  "Beautify Markdown" action that cleans up common formatting
+  inconsistencies (blank-line spacing, bullet markers, heading spacing)
+  without ever touching content inside fenced code blocks
+- Paginated paper-boundary preview for A4, Letter, Legal, and A5 in portrait
+  or landscape, with zoom controls, fit-to-width, and approximate
+  page-break indicators
+- **Three workspace modes on desktop** (Editor only / Split / Preview only,
+  via a segmented control in the top action bar, with the split ratio and
+  chosen mode both remembered across reloads) and **Write/Preview/Style
+  tabs on mobile/tablet** — plus a distraction-free full-screen writing mode
+  that hides all surrounding chrome
+- **Top action bar**: logo, an inline-editable document title, live save
+  status, the workspace mode selector, undo/redo, a Preview shortcut, the
+  export menu, a more-options menu (Beautify Markdown, copy to clipboard),
+  and the theme switcher
 - Five templates (Clean, Technical, Business Report, Academic, Resume), each
   with its own starter content and visual style, applied consistently across
-  the preview, HTML export, and PDF export
+  the preview, HTML export, PDF export, and DOCX export
+- **Custom document color overrides**: pick your own accent, heading, body,
+  muted, border, code-background, and table-header colors on top of any
+  template's palette, with a one-click reset back to the template's defaults
 - Full document settings: page size/orientation/margins, typography (font
   family, sizes, line height, paragraph spacing), metadata (title, author,
   subject, keywords), header/footer with page numbers and placeholders,
   and content options (table of contents, heading numbering, print-styled
   links, code backgrounds, checklist symbols)
-- Export to PDF (custom measurement-based layout engine — see
-  [Export limitations](#export-limitations)), standalone HTML, Markdown, and
-  plain text, each with sanitized filenames derived from the document title
+- Export to **PDF** (custom measurement-based layout engine — see
+  [Export limitations](#export-limitations)), **DOCX** (reusing the same
+  content-block model as PDF export — see
+  [Markdown editor architecture](#markdown-editor-architecture)), standalone
+  **HTML**, **Markdown**, or **plain text** — or **Print** directly via the
+  browser's native print dialog — each with sanitized filenames derived from
+  the document title, clear loading/progress states, and a guard against
+  duplicate export clicks
+- Drag-and-drop or click-to-browse upload of `.md`/`.txt` files, with file
+  type and size validation
 - Local-only persistence: your draft, settings, and theme preference are
   saved to `localStorage` under a versioned schema, restored on reload, with
   an autosave indicator, JSON settings import/export, and a one-click
   "delete all local data" action
-- Light/dark/system theme, fully responsive (desktop two-pane resizable
-  layout; mobile/tablet Editor/Preview/Settings tabs)
+- Light/dark/system theme, fully responsive
 - Interactive Markdown syntax guide with live rendered examples and copy
   buttons
 - Privacy, Terms, About, and Contact pages; a custom 404 page
 - A second converter, **Word to PDF** (`/word-to-pdf`), covered in its own
   section below
 - A third tool, **Merge PDF** (`/merge-pdf`), covered in its own section below
+
+## Markdown editor architecture
+
+The editor is built around a few deliberate architectural choices worth
+documenting:
+
+- **CodeMirror 6, not Monaco.** CodeMirror's modular package structure
+  (`@codemirror/state`/`view`/`commands`/`language`/`lang-markdown`/`search`/
+  `autocomplete`) keeps the bundle small and works reliably on mobile/touch,
+  which mattered more here than Monaco's heavier IDE-oriented feature set.
+  `MarkdownEditor.tsx` wraps a single `EditorView` instance created once in
+  an effect with an empty dependency array (never recreated, to preserve
+  undo history and cursor position); `value`/option props are synced into
+  the view via separate effects rather than driving CodeMirror declaratively
+  from React state on every render. `EditorView.contentAttributes` sets
+  `role="textbox"`/`aria-label="Markdown source"` so the editor keeps the
+  same accessible-name contract a plain `<textarea>` would have had.
+- **One command module, two call sites.** Every formatting transform (bold,
+  headings, lists, tables, Mermaid/math/footnote insertion, ...) lives as a
+  pure `(view: EditorView) => boolean` function in
+  `services/editor/markdownCommands.ts`. Both the toolbar's click handlers
+  and CodeMirror's own keymap call the exact same functions, so "click the
+  toolbar button" and "press the keyboard shortcut" can never drift apart.
+- **Extract-before-parse preprocessing.** Footnotes, explicit `\pagebreak`
+  markers, KaTeX math, and Mermaid diagrams are all handled by pulling the
+  relevant source text out into placeholder tokens _before_ Marked ever
+  parses it, then substituting the real rendered output back into the HTML
+  afterward (`services/markdown/footnotes.ts`, `pageBreaks.ts`, `math.ts`,
+  and the `code` renderer override in `parser.ts`). This matters most for
+  math: LaTeX is full of underscores, asterisks, and backslashes that
+  Markdown's own emphasis/escaping rules would otherwise mangle. Math tokens
+  use Unicode Private-Use-Area code points specifically so they can never
+  collide with real user-authored text.
+- **Mermaid rendering is necessarily async, unlike KaTeX.** KaTeX renders
+  synchronously, so it fits directly into the existing synchronous
+  `renderMarkdown()` pipeline. Mermaid's renderer is Promise-based, so
+  diagrams instead render as an inert placeholder div first
+  (`data-mermaid-source`, holding the raw diagram text) and are hydrated to
+  sanitized SVG a beat later via `hydrateMermaidDiagrams()`, called from a
+  `useEffect` in the live preview after each render pass. Invalid diagram
+  syntax falls back to an inline error box instead of throwing.
+- **PDF and DOCX can't embed live SVG, so Mermaid is rasterized for export
+  only.** The standalone HTML export embeds Mermaid's real SVG output
+  directly (no rasterization needed, since HTML can render SVG natively).
+  The PDF and DOCX pipelines instead rasterize each diagram to a PNG data
+  URI via an offscreen canvas (`services/markdown/mermaidRaster.ts`) and
+  substitute a plain `<p><img></p>` in its place — which the existing
+  image-block detection in `htmlToBlocks.ts` already understood, so no
+  changes were needed to either writer's image handling.
+- **DOCX export reuses the PDF pipeline's content-block model.**
+  `services/docx/docxExportService.ts` runs the exact same
+  `renderMarkdown()` → rasterize-Mermaid → `htmlToBlocks()` →
+  `resolveImageDimensions()` sequence as `pdfExportService.ts`, then hands
+  the resulting `ContentBlock[]` to `blocksToDocx.ts` instead of `PdfWriter`.
+  The two export formats can never structurally diverge on how a document
+  is interpreted — only the final writer (jsPDF vs. the `docx` library)
+  differs. Real Word document semantics are used where they exist (Word
+  heading styles for outline/navigation, native thematic breaks for `<hr>`,
+  a real `PageBreak` run for forced page breaks) layered under explicit
+  run-level formatting for visual fidelity with the PDF/preview.
+- **Sanitization covers more than HTML.** `DOMPurify`'s `USE_PROFILES` is
+  set to allow all of `html`, `svg`, `svgFilters`, and `mathMl` — needed
+  because KaTeX emits MathML alongside its HTML output, and Mermaid emits
+  SVG, both of which the default profile would otherwise strip.
+- **A known, disclosed jsdom limitation.** Mermaid's real layout engine
+  needs SVG text-measurement APIs (`getBBox()`) that jsdom doesn't
+  implement — confirmed via a disposable smoke test before writing the
+  Mermaid test suite. Every Mermaid-dependent test therefore injects a fake
+  render function to exercise the surrounding DOM-traversal and
+  token-decoding logic, rather than depending on Mermaid's real rendering
+  under Vitest; real Mermaid rendering is exercised in a browser via
+  Playwright instead.
 
 ## Word to PDF converter
 
@@ -92,18 +211,18 @@ syntax highlighting, and PDF layout — runs in the browser's JavaScript engine.
   no server, no third-party API, nothing uploaded. The resulting HTML is
   passed through the same `sanitizeHtml()` (DOMPurify) used everywhere else
   in the app before it is ever rendered.
-- **Preview**: reuses the Markdown converter's paginated paper preview
+- **Preview**: reuses the Markdown editor's paginated paper preview
   (`DocumentPaper`, `PreviewToolbar`, zoom/fit-to-width) — same page sizes,
   margins, and zoom behavior as the Markdown side.
 - **Settings**: page size/orientation/margins and header/footer options are
-  the same shared components used by the Markdown converter. An optional
+  the same shared components used by the Markdown editor. An optional
   "Normalize document styling" toggle lets you apply a DocMarkdown template
   and typography (font family, body size, line height) instead of the
   extracted Word styling, which is used by default. Image handling
   (include/exclude, client-side re-compression, quality slider) is
   Word-specific, since embedded images can otherwise bloat the exported PDF.
 - **Export**: PDF (via the same shared `renderHtmlToPdf` layout engine the
-  Markdown converter uses), standalone self-contained HTML, and plain text.
+  Markdown editor uses), standalone self-contained HTML, and plain text.
 - **Conversion warnings**: mammoth reports anything it couldn't map cleanly
   (e.g. an unsupported image type), shown in a dedicated, non-dismissable
   warnings panel alongside a standing disclosure of known formatting
@@ -121,7 +240,7 @@ Word's format supports far more visual layout than HTML/PDF can represent
 - Section-specific page margins (only the document's primary margins apply)
 - Track changes and comments
 - Custom/embedded fonts (PDF export uses jsPDF's core fonts, same as the
-  Markdown converter)
+  Markdown editor)
 - Complex/merged table structures
 - Footnotes, endnotes, and watermarks
 - Advanced headers/footers (only the DocMarkdown-managed header/footer text
@@ -163,7 +282,7 @@ issues, and what changes:
 - **The source document's own page size, margins, and default font were
   never read at all** — the Word converter always fell back to
   DocMarkdown's generic A4/Normal-margins/11pt defaults. `services/word/
-  parseDocxLayout.ts` now reads the `.docx`'s own `word/document.xml`
+parseDocxLayout.ts` now reads the `.docx`'s own `word/document.xml`
   (`<w:sectPr>`) and `word/styles.xml` directly via `jszip` — independent of
   mammoth, which exposes neither — and `useWordDocument.ts` applies the
   detected page size/margins/orientation and dominant font/size
@@ -177,7 +296,7 @@ issues, and what changes:
   dedicated `page-break` block type, detected in `htmlToBlocks.ts` and
   honored as a real forced page turn in `pdfWriter.ts`.
 - **Headings could be stranded alone at the bottom of a page.** `PdfWriter.
-  drawHeading` now reserves room for the heading plus at least one line of
+drawHeading` now reserves room for the heading plus at least one line of
   whatever follows before committing to draw it on the current page, moving
   it to a fresh page instead of orphaning it.
 
@@ -241,11 +360,11 @@ pages** to clear a custom range back to the default.
 Configurable via environment variables (see
 [Environment variables](#environment-variables)); defaults:
 
-| Limit                  | Default | Variable                          |
-| ----------------------- | ------- | ---------------------------------- |
-| Max files per merge     | 50      | `VITE_MAX_MERGE_PDF_FILES`          |
-| Max size per file       | 50 MB   | `VITE_MAX_MERGE_PDF_FILE_SIZE_MB`   |
-| Max combined size       | 250 MB  | `VITE_MAX_MERGE_PDF_COMBINED_SIZE_MB` |
+| Limit               | Default | Variable                              |
+| ------------------- | ------- | ------------------------------------- |
+| Max files per merge | 50      | `VITE_MAX_MERGE_PDF_FILES`            |
+| Max size per file   | 50 MB   | `VITE_MAX_MERGE_PDF_FILE_SIZE_MB`     |
+| Max combined size   | 250 MB  | `VITE_MAX_MERGE_PDF_COMBINED_SIZE_MB` |
 
 ### Merge PDF limitations
 
@@ -275,24 +394,28 @@ preserve:
 
 ## Technology stack
 
-| Concern                | Choice                                                                                   |
-| ---------------------- | ---------------------------------------------------------------------------------------- |
-| UI framework           | React 19 + TypeScript (strict mode)                                                      |
-| Build tool             | Vite 8                                                                                   |
-| Styling                | Tailwind CSS v4                                                                          |
-| Routing                | React Router 7 (lazy-loaded secondary routes)                                            |
-| Markdown parsing       | Marked, with a custom renderer for heading IDs/TOC/numbering and syntax highlighting     |
-| Word (.docx) parsing   | [mammoth](https://github.com/mtingers/mammoth.js) (browser build), DOCX XML → HTML       |
-| DOCX page/font detection | [jszip](https://github.com/Stuk/jszip) — reads `sectPr`/`styles.xml` directly for layout fidelity |
-| PDF merging/inspection | [pdf-lib](https://github.com/Hopding/pdf-lib) — page copying, metadata, encryption check |
-| Sanitization           | DOMPurify (every render path, no exceptions)                                             |
-| Syntax highlighting    | highlight.js (core + a curated language set)                                             |
-| PDF generation         | jsPDF, driven by a hand-built layout engine (see below) — no `html2canvas` rasterization |
-| Metric-compatible fonts | [Carlito/Caladea/Arimo/Tinos/Cousine](https://fonts.google.com/) via `@fontsource`, embedded in PDF export and the live preview for layout fidelity (see [Layout fidelity architecture](#layout-fidelity-architecture)) |
-| Local persistence      | `localStorage`, versioned schema                                                         |
-| Unit/component testing | Vitest + React Testing Library                                                           |
-| E2E testing            | Playwright                                                                               |
-| Linting/formatting     | ESLint (flat config) + Prettier                                                          |
+| Concern                  | Choice                                                                                                                                                                                                                  |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UI framework             | React 19 + TypeScript (strict mode)                                                                                                                                                                                     |
+| Build tool               | Vite 8                                                                                                                                                                                                                  |
+| Styling                  | Tailwind CSS v4                                                                                                                                                                                                         |
+| Routing                  | React Router 7 (lazy-loaded secondary routes)                                                                                                                                                                           |
+| Markdown editor          | CodeMirror 6 (`@codemirror/state`/`view`/`commands`/`language`/`lang-markdown`/`search`/`autocomplete`)                                                                                                                 |
+| Markdown parsing         | Marked, with a custom renderer for heading IDs/TOC/numbering, syntax highlighting, and the Mermaid code-block override                                                                                                  |
+| Math rendering           | [KaTeX](https://katex.org/) — block `$$...$$` and inline `$...$`, rendered before Marked ever sees the source                                                                                                           |
+| Diagram rendering        | [Mermaid](https://mermaid.js.org/) — async SVG in the live preview/HTML export, rasterized to PNG for PDF/DOCX export                                                                                                   |
+| Word (.docx) parsing     | [mammoth](https://github.com/mtingers/mammoth.js) (browser build), DOCX XML → HTML                                                                                                                                      |
+| DOCX page/font detection | [jszip](https://github.com/Stuk/jszip) — reads `sectPr`/`styles.xml` directly for layout fidelity                                                                                                                       |
+| PDF merging/inspection   | [pdf-lib](https://github.com/Hopding/pdf-lib) — page copying, metadata, encryption check                                                                                                                                |
+| Sanitization             | DOMPurify (every render path, no exceptions; `USE_PROFILES` covers html/svg/svgFilters/mathMl)                                                                                                                          |
+| Syntax highlighting      | highlight.js (core + a curated language set)                                                                                                                                                                            |
+| PDF generation           | jsPDF, driven by a hand-built layout engine (see below) — no `html2canvas` rasterization                                                                                                                                |
+| DOCX generation          | [docx](https://github.com/dolanmiu/docx), reusing the same content-block model as PDF export                                                                                                                            |
+| Metric-compatible fonts  | [Carlito/Caladea/Arimo/Tinos/Cousine](https://fonts.google.com/) via `@fontsource`, embedded in PDF export and the live preview for layout fidelity (see [Layout fidelity architecture](#layout-fidelity-architecture)) |
+| Local persistence        | `localStorage`, versioned schema                                                                                                                                                                                        |
+| Unit/component testing   | Vitest + React Testing Library                                                                                                                                                                                          |
+| E2E testing              | Playwright                                                                                                                                                                                                              |
+| Linting/formatting       | ESLint (flat config) + Prettier                                                                                                                                                                                         |
 
 ## Local setup
 
@@ -327,13 +450,27 @@ npm run test:e2e:ui         # Playwright UI mode
 ```
 
 Unit/component coverage includes: Markdown rendering (headings/lists/tables/
-task lists/code/footnotes/escaping/link safety), HTML sanitization, plain-text
-extraction, filename generation, file upload validation, local storage
-persistence, settings JSON import/validation, template registry integrity,
-export builders (Markdown/HTML/text), the formatting toolbar, the upload
-interface (including drag state and error handling), the clear-content
-confirmation flow, the settings panel (including template switching and the
-reset/delete confirmations), and the theme switcher.
+task lists/code/footnotes/escaping/link safety/page breaks/math/Mermaid
+placeholders), the CodeMirror-based editor and its shared formatting-command
+module, the formatting toolbar and toolbar/keyboard-shortcut parity, the
+Beautify Markdown transform (including that it never touches fenced code
+blocks and never mis-normalizes bold/italic emphasis into a list bullet),
+KaTeX math extraction/restoration (including the Pandoc-style heuristic that
+keeps prose like "$5 and $10" from being misread as math), Mermaid diagram
+hydration and PNG rasterization for export (against injected fake renderers,
+since jsdom can't run Mermaid's real layout engine), DOCX export (against
+the real `docx` + `jszip` libraries — unzipping the generated file and
+asserting real document XML content, not just "didn't throw"), the DOCX
+theme/color-override resolution, HTML sanitization, plain-text extraction,
+filename generation, file upload validation, local storage persistence,
+settings JSON import/validation (including color-override validation),
+template registry integrity, export builders (PDF/DOCX/HTML/Markdown/text),
+the top action bar (workspace-mode selector, mobile tabs, undo/redo, the
+more-options menu) and the export menu (including the keyboard-shortcut
+`openSignal` contract), the upload interface (including drag state and error
+handling), the clear-content confirmation flow, the settings panel
+(including template switching, color overrides, and the reset/delete
+confirmations), and the theme switcher.
 
 For the Word to PDF converter, unit/component coverage additionally includes:
 `.docx` file validation (extension/MIME/size/empty checks), legacy `.doc`
@@ -364,7 +501,7 @@ document never gets a spurious blank page before it). A dedicated
 `e2e/fixtures/multi-page.docx` fixture (headings, an explicit page break, a
 table, an inline image, and a `styles.xml` declaring Calibri 11pt — built
 reproducibly via `scripts/generate-word-fixtures.mjs`) is run through the
-*entire* real pipeline end-to-end: parsed, exported, and the resulting PDF
+_entire_ real pipeline end-to-end: parsed, exported, and the resulting PDF
 re-opened with `pdf-lib` to assert its actual page count and page size
 match what the source document specifies.
 
@@ -388,8 +525,11 @@ reorder/page-range/remove/add-more/clear-all/merge flows.
 Playwright covers: typing Markdown and seeing the live preview, uploading a
 `.md` file, applying a template, changing page settings, refreshing to
 restore a saved draft, exporting Markdown, exporting HTML, exporting PDF
-(asserting a valid, non-empty `%PDF-` file), deleting local data, and using
-the converter on a mobile viewport (Editor/Preview/Settings tabs).
+(asserting a valid, non-empty `%PDF-` file), deleting local data, switching
+between the editor-only/split/preview-only workspace modes, the top bar's
+Preview shortcut, undo/redo, entering and exiting full-screen writing mode,
+the Ctrl/Cmd+Enter and Ctrl/Cmd+Shift+P keyboard shortcuts, and using the
+editor on a mobile viewport (Write/Preview/Style tabs).
 
 For Word to PDF (`e2e/word-to-pdf.spec.ts`), Playwright covers: opening the
 page, uploading a valid `.docx` and seeing the converted content in the
@@ -482,16 +622,16 @@ If you deploy to a `gh-pages` branch by hand instead of via Actions, set
 Copy `.env.example` to `.env` and adjust as needed — every variable is
 optional with a safe default.
 
-| Variable                  | Purpose                                                                | Default                   |
-| ------------------------- | ---------------------------------------------------------------------- | ------------------------- |
-| `VITE_GITHUB_URL`         | GitHub link shown in the header                                        | `https://github.com`      |
-| `VITE_SITE_URL`           | Canonical URL used for SEO meta tags                                   | `https://docmarkdown.app` |
-| `VITE_MAX_UPLOAD_SIZE_MB` | Max size for uploaded `.md`/`.txt` files                               | `5`                       |
-| `VITE_MAX_WORD_UPLOAD_SIZE_MB` | Max size for uploaded `.docx` files (Word to PDF converter)       | `10`                      |
-| `VITE_MAX_MERGE_PDF_FILES` | Max number of PDF files per merge                                     | `50`                      |
-| `VITE_MAX_MERGE_PDF_FILE_SIZE_MB` | Max size per individual PDF file (Merge PDF)                   | `50`                      |
-| `VITE_MAX_MERGE_PDF_COMBINED_SIZE_MB` | Max combined size of all selected PDFs (Merge PDF)         | `250`                     |
-| `VITE_ENABLE_ANALYTICS`   | Enables the analytics abstraction (no-op until a provider is wired in) | `false`                   |
+| Variable                              | Purpose                                                                | Default                   |
+| ------------------------------------- | ---------------------------------------------------------------------- | ------------------------- |
+| `VITE_GITHUB_URL`                     | GitHub link shown in the header                                        | `https://github.com`      |
+| `VITE_SITE_URL`                       | Canonical URL used for SEO meta tags                                   | `https://docmarkdown.app` |
+| `VITE_MAX_UPLOAD_SIZE_MB`             | Max size for uploaded `.md`/`.txt` files                               | `5`                       |
+| `VITE_MAX_WORD_UPLOAD_SIZE_MB`        | Max size for uploaded `.docx` files (Word to PDF converter)            | `10`                      |
+| `VITE_MAX_MERGE_PDF_FILES`            | Max number of PDF files per merge                                      | `50`                      |
+| `VITE_MAX_MERGE_PDF_FILE_SIZE_MB`     | Max size per individual PDF file (Merge PDF)                           | `50`                      |
+| `VITE_MAX_MERGE_PDF_COMBINED_SIZE_MB` | Max combined size of all selected PDFs (Merge PDF)                     | `250`                     |
+| `VITE_ENABLE_ANALYTICS`               | Enables the analytics abstraction (no-op until a provider is wired in) | `false`                   |
 
 ## Privacy architecture
 
@@ -597,6 +737,32 @@ Being transparent about where the automated pipelines fall short:
   definitions are supported with correct numbering and back-links, but
   nested footnote definitions (a footnote whose body contains another
   reference) are not specially handled.
+- **Mermaid diagrams are rasterized to PNG for PDF and DOCX export**, since
+  neither format's writer can embed live SVG — the standalone HTML export
+  embeds real SVG instead. This means diagrams in a PDF/DOCX are a fixed-
+  resolution raster image rather than infinitely crisp vector art; a
+  diagram that fails to parse falls back to a plain text paragraph
+  explaining the error rather than blocking the rest of the export.
+- **DOCX export approximates a few things the same way PDF export does**:
+  list markers are literal prefix text rather than Word's native numbering
+  definitions (avoids the complexity/fragility of multi-level Word
+  numbering XML), table column widths are distributed evenly rather than
+  sized to content, and a blockquote's left accent rule is applied
+  per-paragraph rather than as one continuous rule spanning the whole quote.
+
+## Beautify Markdown limitations
+
+The Beautify action is intentionally conservative — it fixes unambiguous
+formatting issues without changing what your document means:
+
+- It does **not** insert a space after a `#` that has no space at all
+  (e.g. `#hashtag`), because per CommonMark that text isn't a heading in the
+  first place; "fixing" it would silently turn plain text into a heading.
+- It does **not** renumber ordered lists, normalize horizontal-rule style, or
+  touch table column alignment — each of those can be an intentional
+  authoring choice rather than an inconsistency.
+- Content inside fenced code blocks (`` ` `` or `~~~`) is never modified,
+  even if it looks like a heading or a list.
 
 ## Browser support
 
@@ -614,12 +780,15 @@ src/
   app/            App shell, routing, and the DocumentContext (markdown +
                    settings + theme + autosave state)
   components/
-    layout/        Header, Footer, Hero, mobile nav, theme switcher
-    editor/         Markdown editor, formatting toolbar, resizable split
+    layout/        Header, Footer, Hero (empty-state only), mobile nav, theme
+                    switcher
+    editor/         CodeMirror-based Markdown editor, formatting toolbar, top
+                    action bar (mode selector, undo/redo, save status,
+                    more-options menu), status bar, resizable split
     preview/        Paginated document preview, zoom controls (shared by both
-                    the Markdown and Word to PDF converters)
-    settings/       Page/typography/metadata/header-footer/content settings
-                    (prop-driven where shared with the Word converter)
+                    the Markdown editor and Word to PDF converter)
+    settings/       Page/typography/metadata/header-footer/content/color
+                    settings (prop-driven where shared with the Word converter)
     export/         Export menu/progress UI
     guide/          Markdown guide example/rendered-output cards
     word/           Word to PDF UI: upload zone, document info, conversion
@@ -634,7 +803,14 @@ src/
                    useWordDocument, useWordFileDrop, useWordExport,
                    useMergePdfFiles, useMergePdfDrop, etc.
   services/
-    markdown/       Marked configuration, footnotes, sanitize, plain-text
+    markdown/       Marked configuration, footnotes, page breaks, math (KaTeX
+                    extraction/restoration), Mermaid (placeholder + hydration
+                    + rasterization for export), beautify, sanitize, plain-text
+    docx/           DOCX export: theme/color-override resolution
+                    (docxTheme.ts), content-block -> docx Paragraph/Table
+                    conversion (blocksToDocx.ts), and orchestration
+                    (docxExportService.ts) — reuses the same
+                    htmlToBlocks/resolveImageDimensions pipeline as PDF export
     word/           DOCX validation, mammoth parsing, HTML sanitization,
                     plain-text extraction, image include/compress handling,
                     raw-XML page/font detection (parseDocxLayout.ts), and the
@@ -647,14 +823,16 @@ src/
                     embeddedFonts.ts (+ the generated embeddedFonts.generated.ts)
                     provide the metric-compatible fonts embedded in every
                     exported PDF for layout fidelity
-    export/         HTML/Markdown/text export builders + orchestration for
-                    both Markdown and Word documents
-    storage/        Versioned localStorage persistence + settings JSON I/O,
-                    plus small non-sensitive Merge PDF UI preferences
+    export/         HTML/Markdown/text export builders, the print service
+                    (renders to a detached iframe and calls `window.print()`),
+                    and orchestration for both Markdown and Word documents
+    storage/        Versioned localStorage persistence + settings JSON I/O
+                    (including color-override validation), plus small
+                    non-sensitive Merge PDF UI preferences
     analytics/       Disabled-by-default analytics abstraction
   templates/       The five document templates (data + starter content)
   types/           Shared TypeScript types (settings, page, typography,
-                   word, mergePdf, ...)
+                   colors, word, mergePdf, ...)
   utils/           Small pure helpers (filename sanitizing, color, text,
                    generic array reorder, ...)
   styles/          Shared document content CSS (used by preview + HTML export);
@@ -673,7 +851,7 @@ scripts/           One-off generator scripts for committed fixtures/assets —
 
 ### Main pages
 
-`/` Markdown converter · `/word-to-pdf` Word to PDF converter ·
+`/` Markdown editor · `/word-to-pdf` Word to PDF converter ·
 `/merge-pdf` Merge PDF tool · `/templates` · `/markdown-guide` · `/privacy`
 · `/terms` · `/about` · `/contact` · `*` 404.
 
@@ -747,8 +925,19 @@ scripts/           One-off generator scripts for committed fixtures/assets —
 
 ## Future improvement ideas
 
-- Per-token syntax-highlight coloring in PDF export (would require mapping
-  highlight.js token spans into styled PDF text runs)
+- Per-token syntax-highlight coloring in PDF and DOCX export (would require
+  mapping highlight.js token spans into styled PDF text runs / docx `TextRun`s)
+- Native Word numbering definitions for DOCX list export, instead of literal
+  marker-prefix text — would need a `numbering.xml` configuration per list,
+  deferred to avoid the fragility of multi-level Word numbering XML for a
+  first pass
+- Embedding Mermaid diagrams as native DOCX `ImageRun` SVG-with-PNG-fallback
+  (the `docx` library supports it) instead of PNG-only, once broader Word
+  version support for inline SVG is confirmed
+- IME/multi-cursor editing polish in the CodeMirror editor for CJK input and
+  power-user multi-selection workflows
+- Word to PDF: content-aware table column sizing and clickable internal PDF
+  links, matching the same future work already planned for Markdown (below)
 - Word to PDF: content-aware table column sizing and clickable internal PDF
   links, matching the same future work already planned for Markdown (below)
 - Word to PDF: an opt-in, best-effort mapping of DOCX section/multi-column
@@ -787,7 +976,7 @@ scripts/           One-off generator scripts for committed fixtures/assets —
   (the current homepage relies on the header nav and a couple of inline
   cross-links in the hero instead, after a card-grid version was found to
   visually squeeze the mobile editor)
-- Content-aware PDF table column sizing
+- Content-aware PDF and DOCX table column sizing
 - Clickable internal PDF links for the table of contents and footnotes
 - IndexedDB-backed multi-document draft history (currently a single draft)
 - A pluggable, opt-in privacy-friendly analytics provider (Plausible/Umami)

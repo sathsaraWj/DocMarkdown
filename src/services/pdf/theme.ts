@@ -1,3 +1,4 @@
+import { resolveTemplateColors } from '@/types/colors'
 import { hexToRgb } from '@/utils/color'
 import type { DocumentSettings } from '@/types/settings'
 import type { DocumentTemplate } from '@/types/template'
@@ -38,6 +39,7 @@ export function buildPdfTheme(
   fontOverride?: PdfThemeFontOverride,
 ): PdfTheme {
   const { typography, content } = settings
+  const style = resolveTemplateColors(template.style, settings.colors)
   const bucketFont = FONT_MAP[typography.fontFamily]
   const bodyFont = fontOverride ? pdfFontNameFor(fontOverride.bodyFontId) : bucketFont
   const headingFont = fontOverride?.headingFontId
@@ -53,13 +55,13 @@ export function buildPdfTheme(
     lineHeight: typography.lineHeight,
     paragraphSpacingMm: typography.paragraphSpacing * 5,
     codeFontSize: typography.codeFontSize,
-    accentColor: hexToRgb(template.style.accentColor),
-    headingColor: hexToRgb(template.style.headingColor),
-    bodyColor: hexToRgb(template.style.bodyColor),
-    mutedColor: hexToRgb(template.style.mutedColor),
-    borderColor: hexToRgb(template.style.borderColor),
-    codeBackground: hexToRgb(template.style.codeBackground),
-    tableHeaderBackground: hexToRgb(template.style.tableHeaderBackground),
+    accentColor: hexToRgb(style.accentColor),
+    headingColor: hexToRgb(style.headingColor),
+    bodyColor: hexToRgb(style.bodyColor),
+    mutedColor: hexToRgb(style.mutedColor),
+    borderColor: hexToRgb(style.borderColor),
+    codeBackground: hexToRgb(style.codeBackground),
+    tableHeaderBackground: hexToRgb(style.tableHeaderBackground),
     codeBlockBackgrounds: content.codeBlockBackgrounds,
     styleLinksForPrint: content.styleLinksForPrint,
     preserveChecklistSymbols: content.preserveChecklistSymbols,

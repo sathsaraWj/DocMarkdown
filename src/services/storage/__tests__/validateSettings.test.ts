@@ -62,4 +62,31 @@ describe('validateDocumentSettings', () => {
     })
     expect(result.metadata.title.length).toBeLessThanOrEqual(500)
   })
+
+  it('accepts valid hex color overrides', () => {
+    const result = validateDocumentSettings({
+      ...DEFAULT_DOCUMENT_SETTINGS,
+      colors: { accentColor: '#ff0000', bodyColor: '#123ABC' },
+    })
+    expect(result.colors).toEqual({ accentColor: '#ff0000', bodyColor: '#123ABC' })
+  })
+
+  it('drops invalid or unknown color override entries', () => {
+    const result = validateDocumentSettings({
+      ...DEFAULT_DOCUMENT_SETTINGS,
+      colors: {
+        accentColor: 'not-a-color',
+        headingColor: 'red',
+        bodyColor: '#12',
+        somethingUnknown: '#ffffff',
+      },
+    })
+    expect(result.colors).toEqual({})
+  })
+
+  it('defaults to an empty color override object when missing entirely', () => {
+    const { colors: _colors, ...rest } = DEFAULT_DOCUMENT_SETTINGS
+    const result = validateDocumentSettings(rest)
+    expect(result.colors).toEqual({})
+  })
 })

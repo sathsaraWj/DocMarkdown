@@ -39,8 +39,15 @@ export async function runExport({
     }
 
     if (format === 'html') {
-      const { html, filename } = buildStandaloneHtml(markdown, settings, template)
+      const { html, filename } = await buildStandaloneHtml(markdown, settings, template)
       downloadText(html, filename, 'text/html')
+      return { success: true, format, filename }
+    }
+
+    if (format === 'docx') {
+      const { generateDocx } = await import('@/services/docx/docxExportService')
+      const { blob, filename } = await generateDocx({ markdown, settings, template, onProgress })
+      downloadBlob(blob, filename)
       return { success: true, format, filename }
     }
 

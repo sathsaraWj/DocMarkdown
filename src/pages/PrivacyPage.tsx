@@ -89,7 +89,7 @@ export default function PrivacyPage() {
             You can delete your local data at any time
           </h2>
           <p className="mt-2">
-            Open the Settings panel from the converter page and choose{' '}
+            Open the Style panel from the editor page and choose{' '}
             <strong>Delete all local data</strong> to permanently remove your saved draft, settings,
             and theme preference from this browser. You can also clear this data using your
             browser's own site-data controls.

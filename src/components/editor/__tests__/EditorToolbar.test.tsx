@@ -20,19 +20,27 @@ describe('EditorToolbar', () => {
     const onAction = vi.fn()
     render(<EditorToolbar onAction={onAction} />)
     const labels: [string, string][] = [
-      ['Heading', 'heading'],
+      ['Bold', 'bold'],
       ['Italic', 'italic'],
+      ['Underline', 'underline'],
       ['Strikethrough', 'strikethrough'],
-      ['Link', 'link'],
-      ['Image', 'image'],
+      ['Heading 1', 'heading1'],
+      ['Heading 2', 'heading2'],
+      ['Heading 3', 'heading3'],
       ['Blockquote', 'blockquote'],
       ['Inline code', 'inlineCode'],
       ['Code block', 'codeBlock'],
+      ['Link', 'link'],
+      ['Image', 'image'],
       ['Ordered list', 'orderedList'],
       ['Unordered list', 'unorderedList'],
       ['Checklist', 'checklist'],
       ['Table', 'table'],
       ['Horizontal rule', 'horizontalRule'],
+      ['Page break', 'pageBreak'],
+      ['Mermaid diagram', 'mermaid'],
+      ['Math block', 'math'],
+      ['Footnote', 'footnote'],
     ]
     for (const [label, action] of labels) {
       fireEvent.click(screen.getByRole('button', { name: label }))

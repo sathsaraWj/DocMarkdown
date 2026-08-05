@@ -25,6 +25,9 @@ function registerHooks(): void {
 }
 
 const SANITIZE_CONFIG: Config = {
+  // All four profiles are enabled (not just 'html') so KaTeX's MathML output
+  // and Mermaid's SVG output survive sanitization alongside regular markup.
+  USE_PROFILES: { html: true, svg: true, svgFilters: true, mathMl: true },
   ADD_ATTR: ['target', 'rel', 'loading', 'referrerpolicy', 'aria-describedby', 'aria-label'],
   FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form'],
   FORBID_ATTR: ['onerror', 'onload', 'onclick'],

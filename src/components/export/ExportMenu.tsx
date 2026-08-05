@@ -1,23 +1,41 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { useDocument } from '@/app/DocumentContext'
-import { ChevronDownIcon, DownloadIcon } from '@/components/common/icons'
+import { ChevronDownIcon, DownloadIcon, PrinterIcon } from '@/components/common/icons'
 import { useExport } from '@/hooks/useExport'
+import { printDocument } from '@/services/export/printService'
 import { getTemplate } from '@/templates'
 import type { ExportFormat } from '@/types/export'
 
 const FORMATS: { id: ExportFormat; label: string; description: string }[] = [
   { id: 'pdf', label: 'PDF', description: 'Formatted, print-ready document' },
+  { id: 'docx', label: 'DOCX', description: 'Editable Word document' },
   { id: 'html', label: 'HTML', description: 'Standalone web page' },
   { id: 'markdown', label: 'Markdown', description: 'Original .md source' },
   { id: 'text', label: 'Plain text', description: 'Readable .txt extract' },
 ]
 
-export function ExportMenu() {
+interface ExportMenuProps {
+  /** Bumping this value opens the menu - used by the page-level Ctrl/Cmd+Shift+P "open export menu" shortcut. */
+  openSignal?: number
+}
+
+export function ExportMenu({ openSignal }: ExportMenuProps = {}) {
   const { markdown, settings } = useDocument()
   const { startExport, isExporting, progress, error, clearError } = useExport()
   const [open, setOpen] = useState(false)
+  const [isPrinting, setIsPrinting] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const busy = isExporting || isPrinting
+  const isFirstOpenSignal = useRef(true)
+
+  useEffect(() => {
+    if (isFirstOpenSignal.current) {
+      isFirstOpenSignal.current = false
+      return
+    }
+    if (openSignal !== undefined) setOpen(true)
+  }, [openSignal])
 
   useEffect(() => {
     function handleClick(event: MouseEvent) {
@@ -40,18 +58,32 @@ export function ExportMenu() {
     void startExport(format, markdown, settings, template)
   }
 
+  const triggerLabel = isExporting
+    ? (progress?.message ?? 'Exporting…')
+    : isPrinting
+      ? 'Printing…'
+      : 'Export'
+
+  const handlePrint = () => {
+    if (busy) return
+    setOpen(false)
+    setIsPrinting(true)
+    const template = getTemplate(settings.templateId)
+    void printDocument(markdown, settings, template).finally(() => setIsPrinting(false))
+  }
+
   return (
     <div className="relative" ref={menuRef}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        disabled={isExporting}
+        disabled={busy}
         aria-haspopup="menu"
         aria-expanded={open}
         className="flex items-center gap-1.5 rounded-md bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <DownloadIcon className="h-4 w-4" />
-        {isExporting ? (progress?.message ?? 'Exporting…') : 'Export'}
+        {triggerLabel}
         <ChevronDownIcon className="h-3.5 w-3.5" />
       </button>
 
@@ -77,6 +109,23 @@ export function ExportMenu() {
               </span>
             </button>
           ))}
+          <div className="my-1 border-t border-neutral-200 dark:border-neutral-700" />
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handlePrint}
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          >
+            <PrinterIcon className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+            <span className="flex flex-col">
+              <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100">
+                Print
+              </span>
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                Open the system print dialog
+              </span>
+            </span>
+          </button>
         </div>
       )}
 

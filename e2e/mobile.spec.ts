@@ -1,16 +1,20 @@
 import { expect, test } from '@playwright/test'
 import path from 'node:path'
 
-test('the converter is usable on a mobile viewport via Editor/Preview/Settings tabs', async ({
+test('the converter is usable on a mobile viewport via Write/Preview/Style tabs', async ({
   page,
 }) => {
   await page.goto('/')
 
-  // Editor tab is active by default; the two-column desktop layout is hidden.
+  // Write tab is active by default; the two-column desktop layout is hidden.
   const editor = page.getByRole('textbox', { name: /markdown source/i })
   await expect(editor).toBeVisible()
 
-  await editor.click()
+  // CodeMirror's content element reports the full document's height, not just
+  // its scrolled viewport, so a default center-click can land outside what's
+  // actually visible on a short mobile viewport. Click near the top-left,
+  // which is always within the visible scrollport.
+  await editor.click({ position: { x: 10, y: 10 } })
   await editor.press('Control+A')
   await editor.fill('# Mobile Heading\n\nMobile paragraph text.')
 
@@ -18,19 +22,21 @@ test('the converter is usable on a mobile viewport via Editor/Preview/Settings t
   const preview = page.locator('[data-testid="document-paper"] .doc-content')
   await expect(preview.locator('h1')).toHaveText('Mobile Heading')
 
-  await page.getByRole('tab', { name: 'Settings' }).click()
+  await page.getByRole('tab', { name: 'Style' }).click()
   await expect(page.getByText('Document settings')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Page' })).toBeVisible()
 
-  await page.getByRole('tab', { name: 'Editor' }).click()
+  await page.getByRole('tab', { name: 'Write' }).click()
   await expect(editor).toBeVisible()
-  await expect(editor).toHaveValue(/Mobile Heading/)
+  await expect(editor).toContainText('Mobile Heading')
 })
 
 test('the Word to PDF converter is usable on a mobile viewport', async ({ page }) => {
   await page.goto('/word-to-pdf')
 
-  await expect(page.getByRole('heading', { level: 1, name: /word to pdf converter/i })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 1, name: /word to pdf converter/i }),
+  ).toBeVisible()
 
   const fileChooserPromise = page.waitForEvent('filechooser')
   await page.getByRole('button', { name: 'Browse files', exact: true }).click()
@@ -44,7 +50,9 @@ test('the Word to PDF converter is usable on a mobile viewport', async ({ page }
   await expect(page.getByRole('heading', { name: 'Page' })).toBeVisible()
 })
 
-test('the Merge PDF tool is usable on a mobile viewport, including reordering', async ({ page }) => {
+test('the Merge PDF tool is usable on a mobile viewport, including reordering', async ({
+  page,
+}) => {
   await page.goto('/merge-pdf')
 
   await expect(page.getByRole('heading', { level: 1, name: /merge pdf files/i })).toBeVisible()

@@ -1,4 +1,5 @@
 import { renderMarkdown } from '@/services/markdown'
+import { rasterizeMermaidDiagrams } from '@/services/markdown/mermaidRaster'
 import type { DocumentSettings } from '@/types/settings'
 import type { DocumentTemplate } from '@/types/template'
 import type { ExportProgress } from '@/types/export'
@@ -31,5 +32,8 @@ export async function generatePdf({
     generateToc: false,
   })
 
-  return renderHtmlToPdf({ html, settings, template, onProgress })
+  onProgress?.({ status: 'preparing', message: 'Rendering diagrams…', percent: 10 })
+  const withRasterizedDiagrams = await rasterizeMermaidDiagrams(html)
+
+  return renderHtmlToPdf({ html: withRasterizedDiagrams, settings, template, onProgress })
 }

@@ -239,3 +239,128 @@ export function LayersIcon(props: SVGProps<SVGSVGElement>) {
     </Icon>
   )
 }
+
+export function MaximizeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M8 3H4v4" />
+      <path d="M16 3h4v4" />
+      <path d="M8 21H4v-4" />
+      <path d="M16 21h4v-4" />
+    </Icon>
+  )
+}
+
+export function MinimizeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M4 8V4h4" />
+      <path d="M20 8V4h-4" />
+      <path d="M4 16v4h4" />
+      <path d="M20 16v4h-4" />
+    </Icon>
+  )
+}
+
+export function SearchIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <circle cx="11" cy="11" r="7" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </Icon>
+  )
+}
+
+export function WrapTextIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <path d="M4 12h13a3 3 0 0 1 0 6h-4" />
+      <path d="M15 15l-2 3 2 3" />
+      <line x1="4" y1="18" x2="9" y2="18" />
+    </Icon>
+  )
+}
+
+export function SpellcheckIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M4 16l4-10 4 10" />
+      <path d="M5.5 12.5h5" />
+      <path d="M14 12l3 3 5-6" />
+    </Icon>
+  )
+}
+
+export function UndoIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M9 7 4 12l5 5" />
+      <path d="M4 12h11a5 5 0 0 1 0 10h-1" />
+    </Icon>
+  )
+}
+
+export function RedoIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M15 7l5 5-5 5" />
+      <path d="M20 12H9a5 5 0 0 0 0 10h1" />
+    </Icon>
+  )
+}
+
+export function MoreIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="19" cy="12" r="1.2" fill="currentColor" stroke="none" />
+    </Icon>
+  )
+}
+
+export function ColumnsIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="4" width="18" height="16" rx="1.5" />
+      <line x1="12" y1="4" x2="12" y2="20" />
+    </Icon>
+  )
+}
+
+export function EyeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </Icon>
+  )
+}
+
+export function EditIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </Icon>
+  )
+}
+
+export function SparklesIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" />
+    </Icon>
+  )
+}
+
+export function PrinterIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M6 9V3h12v6" />
+      <rect x="4" y="9" width="16" height="8" rx="1.5" />
+      <path d="M6 17h12v4H6z" />
+    </Icon>
+  )
+}

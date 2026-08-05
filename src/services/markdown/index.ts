@@ -1,5 +1,7 @@
 import { escapeHtml } from '@/utils/text'
 import { extractFootnotes, renderFootnotesSection } from './footnotes'
+import { extractMath, restoreMath } from './math'
+import { extractPageBreaks } from './pageBreaks'
 import { renderMarkdownToHtml, type TocItem } from './parser'
 import { sanitizeHtml } from './sanitize'
 
@@ -37,14 +39,17 @@ export function renderMarkdown(
   source: string,
   options: RenderMarkdownOptions = {},
 ): RenderMarkdownResult {
-  const { content, definitions } = extractFootnotes(source)
+  const withPageBreaks = extractPageBreaks(source)
+  const { content: withoutFootnotes, definitions } = extractFootnotes(withPageBreaks)
+  const { content, blocks: mathBlocks } = extractMath(withoutFootnotes)
   const { html, toc } = renderMarkdownToHtml(content, {
     headingNumbering: options.headingNumbering,
   })
   const footnotesHtml = renderFootnotesSection(definitions, renderFootnoteInline)
   const combined = footnotesHtml ? `${html}${footnotesHtml}` : html
+  const withMath = restoreMath(combined, mathBlocks)
   return {
-    html: sanitizeHtml(combined),
+    html: sanitizeHtml(withMath),
     toc: options.generateToc === false ? [] : toc,
   }
 }

@@ -1,7 +1,8 @@
 import { Marked, Parser, TextRenderer, type Tokens } from 'marked'
 
-import { slugify } from '@/utils/text'
+import { escapeHtml, slugify } from '@/utils/text'
 import { highlightCode } from './highlight'
+import { buildMermaidPlaceholder } from './mermaid'
 
 export interface TocItem {
   id: string
@@ -69,6 +70,9 @@ markedInstance.use({
       return `<h${depth} id="${id}">${prefixMarkup}${html}</h${depth}>\n`
     },
     code({ text, lang }: Tokens.Code) {
+      if (lang === 'mermaid') {
+        return buildMermaidPlaceholder(text, escapeHtml(text))
+      }
       const { html, language } = highlightCode(text, lang)
       const languageClass = language ? ` language-${language}` : ''
       const langLabel = lang ? `<div class="code-block-lang" aria-hidden="true">${lang}</div>` : ''

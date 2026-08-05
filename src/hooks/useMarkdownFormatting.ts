@@ -1,12 +1,29 @@
 import { useCallback } from 'react'
 import type { RefObject } from 'react'
 
-import { replaceRange } from '@/utils/textareaEditing'
+import type { MarkdownEditorHandle } from '@/components/editor/MarkdownEditor'
+import {
+  applyLinePrefix,
+  insertBlock,
+  insertCodeBlock,
+  insertFootnote,
+  insertImage,
+  insertLink,
+  insertMath,
+  insertMermaid,
+  insertPageBreak,
+  insertTable,
+  toggleHeading,
+  wrapSelection,
+} from '@/services/editor/markdownCommands'
 
 export type ToolbarActionId =
-  | 'heading'
+  | 'heading1'
+  | 'heading2'
+  | 'heading3'
   | 'bold'
   | 'italic'
+  | 'underline'
   | 'strikethrough'
   | 'link'
   | 'image'
@@ -18,192 +35,91 @@ export type ToolbarActionId =
   | 'checklist'
   | 'table'
   | 'horizontalRule'
+  | 'mermaid'
+  | 'math'
+  | 'footnote'
+  | 'pageBreak'
 
-function currentLineBounds(value: string, selectionStart: number, selectionEnd: number) {
-  const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1
-  const nextBreak = value.indexOf('\n', selectionEnd)
-  const lineEnd = nextBreak === -1 ? value.length : nextBreak
-  return { lineStart, lineEnd }
-}
-
-export function useMarkdownFormatting(
-  textareaRef: RefObject<HTMLTextAreaElement | null>,
-  onChange: (value: string) => void,
-) {
-  const withTextarea = useCallback(
-    (fn: (textarea: HTMLTextAreaElement) => void) => {
-      const textarea = textareaRef.current
-      if (!textarea) return
-      fn(textarea)
-      onChange(textarea.value)
-    },
-    [onChange, textareaRef],
-  )
-
-  const wrapSelection = useCallback(
-    (before: string, after: string, placeholder: string) => {
-      withTextarea((textarea) => {
-        const { selectionStart, selectionEnd, value } = textarea
-        const hasSelection = selectionStart !== selectionEnd
-        const selected = hasSelection ? value.slice(selectionStart, selectionEnd) : placeholder
-        replaceRange(textarea, selectionStart, selectionEnd, `${before}${selected}${after}`)
-        const selectStart = selectionStart + before.length
-        textarea.setSelectionRange(selectStart, selectStart + selected.length)
-      })
-    },
-    [withTextarea],
-  )
-
-  const applyLinePrefix = useCallback(
-    (prefixFor: (lineIndex: number) => string) => {
-      withTextarea((textarea) => {
-        const { selectionStart, selectionEnd, value } = textarea
-        const { lineStart, lineEnd } = currentLineBounds(value, selectionStart, selectionEnd)
-        const segment = value.slice(lineStart, lineEnd)
-        const lines = segment.length > 0 ? segment.split('\n') : ['']
-        const prefixed = lines.map((line, index) => `${prefixFor(index)}${line}`).join('\n')
-        replaceRange(textarea, lineStart, lineEnd, prefixed)
-        textarea.setSelectionRange(lineStart, lineStart + prefixed.length)
-      })
-    },
-    [withTextarea],
-  )
-
-  const insertBlock = useCallback(
-    (text: string) => {
-      withTextarea((textarea) => {
-        const { selectionStart, value } = textarea
-        const needsLeadingBreak = selectionStart > 0 && value[selectionStart - 1] !== '\n'
-        const prefix = needsLeadingBreak ? '\n\n' : ''
-        replaceRange(textarea, textarea.selectionStart, textarea.selectionEnd, `${prefix}${text}`)
-      })
-    },
-    [withTextarea],
-  )
-
-  const toggleHeading = useCallback(() => {
-    withTextarea((textarea) => {
-      const { selectionStart, selectionEnd, value } = textarea
-      const { lineStart, lineEnd } = currentLineBounds(value, selectionStart, selectionEnd)
-      const line = value.slice(lineStart, lineEnd)
-      const match = /^(#{1,6})\s?/.exec(line)
-      const level = match ? (match[1]?.length ?? 0) : 0
-      const stripped = match ? line.slice(match[0].length) : line
-      const nextLevel = level >= 6 ? 0 : level + 1
-      const newLine = nextLevel === 0 ? stripped : `${'#'.repeat(nextLevel)} ${stripped}`
-      replaceRange(textarea, lineStart, lineEnd, newLine)
-      textarea.setSelectionRange(lineStart, lineStart + newLine.length)
-    })
-  }, [withTextarea])
-
-  const insertLink = useCallback(() => {
-    withTextarea((textarea) => {
-      const { selectionStart, selectionEnd, value } = textarea
-      const hasSelection = selectionStart !== selectionEnd
-      const label = hasSelection ? value.slice(selectionStart, selectionEnd) : 'link text'
-      const text = `[${label}](https://example.com)`
-      replaceRange(textarea, selectionStart, selectionEnd, text)
-      const urlStart = selectionStart + label.length + 3
-      textarea.setSelectionRange(urlStart, urlStart + 'https://example.com'.length)
-    })
-  }, [withTextarea])
-
-  const insertImage = useCallback(() => {
-    withTextarea((textarea) => {
-      const { selectionStart, selectionEnd, value } = textarea
-      const hasSelection = selectionStart !== selectionEnd
-      const alt = hasSelection ? value.slice(selectionStart, selectionEnd) : 'image description'
-      const text = `![${alt}](https://example.com/image.png)`
-      replaceRange(textarea, selectionStart, selectionEnd, text)
-      const urlStart = selectionStart + alt.length + 4
-      textarea.setSelectionRange(urlStart, urlStart + 'https://example.com/image.png'.length)
-    })
-  }, [withTextarea])
-
-  const insertTable = useCallback(() => {
-    const table = [
-      '| Column 1 | Column 2 | Column 3 |',
-      '| -------- | -------- | -------- |',
-      '| Cell     | Cell     | Cell     |',
-    ].join('\n')
-    insertBlock(`${table}\n`)
-  }, [insertBlock])
-
-  const insertHorizontalRule = useCallback(() => {
-    insertBlock('---\n')
-  }, [insertBlock])
-
-  const insertCodeBlock = useCallback(() => {
-    withTextarea((textarea) => {
-      const { selectionStart, selectionEnd, value } = textarea
-      const hasSelection = selectionStart !== selectionEnd
-      const code = hasSelection ? value.slice(selectionStart, selectionEnd) : 'code here'
-      const needsLeadingBreak = selectionStart > 0 && value[selectionStart - 1] !== '\n'
-      const prefix = needsLeadingBreak ? '\n\n' : ''
-      const text = `${prefix}\`\`\`\n${code}\n\`\`\`\n`
-      replaceRange(textarea, selectionStart, selectionEnd, text)
-      const codeStart = selectionStart + prefix.length + 4
-      textarea.setSelectionRange(codeStart, codeStart + code.length)
-    })
-  }, [withTextarea])
-
+/**
+ * Toolbar/keyboard-shortcut formatting actions for the CodeMirror-based
+ * editor. Each action either transforms the current selection or, when
+ * nothing is selected, inserts a placeholder with the cursor positioned
+ * usefully. The actual transforms live in services/editor/markdownCommands.ts
+ * so the same logic also backs the editor's own keyboard shortcuts.
+ */
+export function useMarkdownFormatting(editorRef: RefObject<MarkdownEditorHandle | null>) {
   const runAction = useCallback(
     (action: ToolbarActionId) => {
+      const view = editorRef.current?.getView()
+      if (!view) return
+
       switch (action) {
-        case 'heading':
-          toggleHeading()
+        case 'heading1':
+          toggleHeading(view, 1)
+          break
+        case 'heading2':
+          toggleHeading(view, 2)
+          break
+        case 'heading3':
+          toggleHeading(view, 3)
           break
         case 'bold':
-          wrapSelection('**', '**', 'bold text')
+          wrapSelection(view, '**', '**', 'bold text')
           break
         case 'italic':
-          wrapSelection('*', '*', 'italic text')
+          wrapSelection(view, '*', '*', 'italic text')
+          break
+        case 'underline':
+          wrapSelection(view, '<u>', '</u>', 'underlined text')
           break
         case 'strikethrough':
-          wrapSelection('~~', '~~', 'strikethrough text')
+          wrapSelection(view, '~~', '~~', 'strikethrough text')
           break
         case 'inlineCode':
-          wrapSelection('`', '`', 'code')
+          wrapSelection(view, '`', '`', 'code')
           break
         case 'codeBlock':
-          insertCodeBlock()
+          insertCodeBlock(view)
           break
         case 'link':
-          insertLink()
+          insertLink(view)
           break
         case 'image':
-          insertImage()
+          insertImage(view)
           break
         case 'blockquote':
-          applyLinePrefix(() => '> ')
+          applyLinePrefix(view, () => '> ')
           break
         case 'orderedList':
-          applyLinePrefix((index) => `${index + 1}. `)
+          applyLinePrefix(view, (index) => `${index + 1}. `)
           break
         case 'unorderedList':
-          applyLinePrefix(() => '- ')
+          applyLinePrefix(view, () => '- ')
           break
         case 'checklist':
-          applyLinePrefix(() => '- [ ] ')
+          applyLinePrefix(view, () => '- [ ] ')
           break
         case 'table':
-          insertTable()
+          insertTable(view)
           break
         case 'horizontalRule':
-          insertHorizontalRule()
+          insertBlock(view, '---\n')
+          break
+        case 'mermaid':
+          insertMermaid(view)
+          break
+        case 'math':
+          insertMath(view)
+          break
+        case 'footnote':
+          insertFootnote(view)
+          break
+        case 'pageBreak':
+          insertPageBreak(view)
           break
       }
     },
-    [
-      applyLinePrefix,
-      insertCodeBlock,
-      insertHorizontalRule,
-      insertImage,
-      insertLink,
-      insertTable,
-      toggleHeading,
-      wrapSelection,
-    ],
+    [editorRef],
   )
 
   return { runAction }

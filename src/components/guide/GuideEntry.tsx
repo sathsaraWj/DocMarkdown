@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { CheckIcon, CopyIcon } from '@/components/common/icons'
 import { renderMarkdown } from '@/services/markdown'
+import { hydrateMermaidDiagrams } from '@/services/markdown/mermaid'
 
 interface GuideEntryProps {
   title: string
@@ -12,6 +13,13 @@ interface GuideEntryProps {
 export function GuideEntry({ title, description, example }: GuideEntryProps) {
   const [copied, setCopied] = useState(false)
   const { html } = renderMarkdown(example)
+  const previewRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const node = previewRef.current
+    if (!node) return
+    void hydrateMermaidDiagrams(node)
+  }, [html])
 
   const handleCopy = async () => {
     try {
@@ -60,7 +68,11 @@ export function GuideEntry({ title, description, example }: GuideEntryProps) {
           <span className="mb-2 block text-xs font-medium text-neutral-500 dark:text-neutral-400">
             Rendered output
           </span>
-          <div className="doc-content text-sm" dangerouslySetInnerHTML={{ __html: html }} />
+          <div
+            ref={previewRef}
+            className="doc-content text-sm"
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
         </div>
       </div>
     </section>

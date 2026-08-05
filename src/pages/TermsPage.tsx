@@ -3,7 +3,7 @@ import { usePageMeta } from '@/hooks/usePageMeta'
 export default function TermsPage() {
   usePageMeta({
     title: 'Terms of Use',
-    description: 'Terms governing the use of the DocMarkdown Markdown-to-PDF converter.',
+    description: 'Terms governing the use of the DocMarkdown Markdown document studio.',
     path: '/terms',
   })
 

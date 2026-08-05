@@ -20,6 +20,41 @@
   --color-accent-950: #171c52;
 }
 
+/* CodeMirror editor tokens — kept separate from the @theme block above since
+   CodeMirror's theme is assembled as a JS style object (EditorView.theme),
+   not Tailwind utility classes, so it can't pick up `dark:` variants on its
+   own. These follow the same light/dark values as the rest of the app. */
+:root {
+  --cm-bg: #ffffff;
+  --cm-fg: #171717;
+  --cm-gutter-bg: #fafafa;
+  --cm-gutter-fg: #a3a3a3;
+  --cm-border: #e5e5e5;
+  --cm-active-line: rgba(37, 71, 233, 0.06);
+  --cm-selection: rgba(37, 71, 233, 0.18);
+  --cm-caret: #2547e9;
+  --cm-heading: #111827;
+  --cm-emphasis: #1f37d1;
+  --cm-link: #1f37d1;
+  --cm-code: #b91c1c;
+  --cm-quote: #6b7280;
+}
+html.dark {
+  --cm-bg: #0a0a0a;
+  --cm-fg: #f5f5f5;
+  --cm-gutter-bg: #171717;
+  --cm-gutter-fg: #737373;
+  --cm-border: #262626;
+  --cm-active-line: rgba(96, 139, 250, 0.1);
+  --cm-selection: rgba(96, 139, 250, 0.28);
+  --cm-caret: #93b4fd;
+  --cm-heading: #f5f5f5;
+  --cm-emphasis: #93b4fd;
+  --cm-link: #93b4fd;
+  --cm-code: #f87171;
+  --cm-quote: #a3a3a3;
+}
+
 @layer base {
   html {
     color-scheme: light;

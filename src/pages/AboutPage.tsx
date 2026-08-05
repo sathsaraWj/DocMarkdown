@@ -6,7 +6,7 @@ export default function AboutPage() {
   usePageMeta({
     title: 'About',
     description:
-      'DocMarkdown is a privacy-focused Markdown to PDF converter that runs entirely in your browser.',
+      'DocMarkdown is a privacy-focused Markdown document studio that runs entirely in your browser.',
     path: '/about',
   })
 
@@ -18,9 +18,10 @@ export default function AboutPage() {
 
       <div className="mt-6 flex flex-col gap-6 text-neutral-700 dark:text-neutral-300">
         <p>
-          DocMarkdown converts Markdown into clean, professional PDF, HTML, and text documents —
-          directly in your browser. There is no backend, no account, and no upload step: your
-          Markdown is parsed, rendered, and exported entirely on your device.
+          DocMarkdown is a Markdown editor that turns your writing into clean, professional PDF,
+          DOCX, HTML, or plain-text documents — directly in your browser. There is no backend, no
+          account, and no upload step: your Markdown is written, rendered, and exported entirely on
+          your device.
         </p>
 
         <section>
@@ -28,9 +29,9 @@ export default function AboutPage() {
             Why we built it
           </h2>
           <p className="mt-2">
-            Most Markdown-to-PDF tools require uploading your document to a server. For README
+            Most Markdown document tools require uploading your content to a server. For README
             files, personal notes, resumes, and internal reports, that's an unnecessary trade-off.
-            DocMarkdown does the conversion locally, so sensitive drafts never leave your machine.
+            DocMarkdown does everything locally, so sensitive drafts never leave your machine.
           </p>
         </section>
 
@@ -39,10 +40,11 @@ export default function AboutPage() {
             What you can do
           </h2>
           <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>Write or paste Markdown with a live, paginated preview</li>
-            <li>Choose from five professionally designed templates</li>
+            <li>Write Markdown in a full code-editor experience with a live, paginated preview</li>
+            <li>Render tables, syntax-highlighted code, Mermaid diagrams, and math notation</li>
+            <li>Choose from five professionally designed templates and customize document colors</li>
             <li>Customize page size, margins, typography, and headers/footers</li>
-            <li>Export to PDF, standalone HTML, Markdown, or plain text</li>
+            <li>Export to PDF, DOCX, standalone HTML, Markdown, or plain text — or print directly</li>
             <li>Keep working offline — drafts and settings save to your browser automatically</li>
           </ul>
         </section>
@@ -50,8 +52,9 @@ export default function AboutPage() {
         <section>
           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Built with</h2>
           <p className="mt-2">
-            React, TypeScript, Vite, and Tailwind CSS for the interface; Marked and DOMPurify for
-            safe Markdown rendering; highlight.js for syntax highlighting; and jsPDF for PDF
+            React, TypeScript, Vite, and Tailwind CSS for the interface; CodeMirror 6 for the
+            editor; Marked and DOMPurify for safe Markdown rendering; highlight.js for syntax
+            highlighting; KaTeX for math and Mermaid for diagrams; and jsPDF and docx for document
             generation — all running client-side.
           </p>
         </section>

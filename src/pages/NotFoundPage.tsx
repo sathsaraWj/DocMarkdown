@@ -22,7 +22,7 @@ export default function NotFoundPage() {
         to="/"
         className="mt-6 rounded-md bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700"
       >
-        Back to the converter
+        Back to the editor
       </Link>
     </div>
   )

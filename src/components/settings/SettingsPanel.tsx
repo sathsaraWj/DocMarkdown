@@ -1,6 +1,7 @@
 import { useDocument } from '@/app/DocumentContext'
 import type { PageSettings } from '@/types/page'
 import type { HeaderFooterSettings } from '@/types/headerFooter'
+import { ColorSettingsSection } from './ColorSettingsSection'
 import { ContentOptionsSection } from './ContentOptionsSection'
 import { HeaderFooterSettingsSection } from './HeaderFooterSettingsSection'
 import { MetadataSettingsSection } from './MetadataSettingsSection'
@@ -34,6 +35,7 @@ export function SettingsPanel() {
         />
         <PageSettingsSection page={settings.page} onChange={updatePage} />
         <TypographySettingsSection />
+        <ColorSettingsSection />
         <MetadataSettingsSection />
         <HeaderFooterSettingsSection
           headerFooter={settings.headerFooter}

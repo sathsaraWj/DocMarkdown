@@ -2,24 +2,17 @@ import { createRef } from 'react'
 import { describe, expect, it } from 'vitest'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 
+import { useDocument } from '@/app/DocumentContext'
 import { renderWithProviders } from '@/test/testUtils'
 import { useFileUpload } from '@/hooks/useFileUpload'
 import { EditorPanel } from '../EditorPanel'
+import type { MarkdownEditorHandle } from '../MarkdownEditor'
 
 function Harness() {
-  const textareaRef = createRef<HTMLTextAreaElement>()
-  const upload = useFileUpload((text) => {
-    const textarea = textareaRef.current
-    if (textarea) {
-      const setter = Object.getOwnPropertyDescriptor(
-        window.HTMLTextAreaElement.prototype,
-        'value',
-      )?.set
-      setter?.call(textarea, text)
-      textarea.dispatchEvent(new Event('input', { bubbles: true }))
-    }
-  })
-  return <EditorPanel textareaRef={textareaRef} upload={upload} />
+  const editorRef = createRef<MarkdownEditorHandle>()
+  const { setMarkdown } = useDocument()
+  const upload = useFileUpload(setMarkdown)
+  return <EditorPanel editorRef={editorRef} upload={upload} />
 }
 
 function makeFile(name: string, content: string, type = 'text/markdown'): File {
@@ -45,8 +38,8 @@ describe('EditorPanel upload interface', () => {
     fireEvent.change(input, { target: { files: [file] } })
 
     await waitFor(() => {
-      expect(screen.getByRole('textbox', { name: /markdown source/i })).toHaveValue(
-        '# Uploaded content',
+      expect(screen.getByRole('textbox', { name: /markdown source/i }).textContent).toContain(
+        'Uploaded content',
       )
     })
   })
@@ -73,20 +66,64 @@ describe('EditorPanel upload interface', () => {
 describe('EditorPanel clear confirmation', () => {
   it('requires confirmation before clearing the editor content', async () => {
     renderWithProviders(<Harness />)
-    const textarea = screen.getByRole('textbox', {
-      name: /markdown source/i,
-    }) as HTMLTextAreaElement
-    fireEvent.change(textarea, { target: { value: 'Some content' } })
-    expect(textarea).toHaveValue('Some content')
+    const editor = screen.getByRole('textbox', { name: /markdown source/i })
 
     fireEvent.click(screen.getByRole('button', { name: /clear editor content/i }))
     expect(screen.getByText(/clear editor content\?/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
-    expect(textarea).toHaveValue('Some content')
+    expect(editor.textContent).toContain('DocMarkdown')
 
     fireEvent.click(screen.getByRole('button', { name: /clear editor content/i }))
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }))
-    expect(textarea).toHaveValue('')
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: /markdown source/i }).textContent).toBe('')
+    })
+  })
+})
+
+describe('EditorPanel editor controls', () => {
+  it('toggles soft-wrap and spellcheck without crashing', () => {
+    renderWithProviders(<Harness />)
+    const wrapButton = screen.getByRole('button', { name: /toggle soft line wrapping/i })
+    const spellButton = screen.getByRole('button', { name: /toggle spellcheck/i })
+    expect(wrapButton).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(wrapButton)
+    expect(wrapButton).toHaveAttribute('aria-pressed', 'true')
+
+    expect(spellButton).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(spellButton)
+    expect(spellButton).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('shows a fullscreen toggle only when a handler is provided', () => {
+    renderWithProviders(<Harness />)
+    expect(
+      screen.queryByRole('button', { name: /full-screen writing mode/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('beautifies the document content on click', async () => {
+    renderWithProviders(<Harness />)
+    const input = screen.getByLabelText(
+      /choose a markdown or text file to upload/i,
+    ) as HTMLInputElement
+    const file = makeFile('messy.md', '* first item\n* second item   \n')
+    fireEvent.change(input, { target: { files: [file] } })
+
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: /markdown source/i }).textContent).toContain(
+        'first item',
+      )
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /beautify markdown/i }))
+
+    await waitFor(() => {
+      const text = screen.getByRole('textbox', { name: /markdown source/i }).textContent ?? ''
+      expect(text).toContain('- first item')
+      expect(text).toContain('- second item')
+      expect(text).not.toContain('* first item')
+    })
   })
 })

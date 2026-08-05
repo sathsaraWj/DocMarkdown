@@ -1,3 +1,4 @@
+import { COLOR_OVERRIDE_FIELDS, type ColorOverrides } from '@/types/colors'
 import { TEMPLATE_IDS, type TemplateId } from '@/types/template'
 import { DEFAULT_DOCUMENT_SETTINGS, type DocumentSettings } from '@/types/settings'
 import {
@@ -13,6 +14,7 @@ import type { DocumentMetadata } from '@/types/document'
 import type { HeaderFooterSettings } from '@/types/headerFooter'
 import type { ContentOptions } from '@/types/contentOptions'
 
+const HEX_COLOR_RE = /^#[0-9a-f]{6}$/i
 const PAGE_SIZES: readonly PageSize[] = ['A4', 'Letter', 'Legal', 'A5']
 const ORIENTATIONS: readonly Orientation[] = ['portrait', 'landscape']
 const MARGIN_PRESETS: readonly MarginPreset[] = ['narrow', 'normal', 'wide', 'custom']
@@ -152,6 +154,18 @@ function validateContent(value: unknown): ContentOptions {
   }
 }
 
+function validateColors(value: unknown): ColorOverrides {
+  if (!isRecord(value)) return {}
+  const result: ColorOverrides = {}
+  for (const { key } of COLOR_OVERRIDE_FIELDS) {
+    const candidate = value[key]
+    if (typeof candidate === 'string' && HEX_COLOR_RE.test(candidate)) {
+      result[key] = candidate
+    }
+  }
+  return result
+}
+
 function validateTemplateId(value: unknown): TemplateId {
   return TEMPLATE_IDS.includes(value as TemplateId)
     ? (value as TemplateId)
@@ -171,5 +185,6 @@ export function validateDocumentSettings(value: unknown): DocumentSettings {
     metadata: validateMetadata(value.metadata),
     headerFooter: validateHeaderFooter(value.headerFooter),
     content: validateContent(value.content),
+    colors: validateColors(value.colors),
   }
 }

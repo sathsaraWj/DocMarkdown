@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useDocument } from '@/app/DocumentContext'
 import { EditorPanel } from '@/components/editor/EditorPanel'
+import { EditorTopBar, type MobileTab, type WorkspaceMode } from '@/components/editor/EditorTopBar'
+import type { MarkdownEditorHandle } from '@/components/editor/MarkdownEditor'
 import { ResizableSplit } from '@/components/editor/ResizableSplit'
-import { ExportMenu } from '@/components/export/ExportMenu'
 import { Hero } from '@/components/layout/Hero'
 import { PreviewPanel } from '@/components/preview/PreviewPanel'
 import { SettingsPanel } from '@/components/settings/SettingsPanel'
@@ -11,32 +12,40 @@ import { useFileUpload } from '@/hooks/useFileUpload'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { usePageMeta } from '@/hooks/usePageMeta'
 
-type MobileTab = 'editor' | 'preview' | 'settings'
+const WORKSPACE_MODE_KEY = 'docmarkdown:workspace-mode'
 
-const MOBILE_TABS: { id: MobileTab; label: string }[] = [
-  { id: 'editor', label: 'Editor' },
-  { id: 'preview', label: 'Preview' },
-  { id: 'settings', label: 'Settings' },
-]
+function loadWorkspaceMode(): WorkspaceMode {
+  if (typeof window === 'undefined') return 'split'
+  const stored = window.sessionStorage.getItem(WORKSPACE_MODE_KEY)
+  return stored === 'editor' || stored === 'split' || stored === 'preview' ? stored : 'split'
+}
 
 export function ConverterPage() {
   usePageMeta({
-    title: 'Markdown to PDF Converter',
+    title: 'Markdown Editor',
     description:
-      'Convert Markdown into clean, professional PDF, HTML, and text documents directly in your browser. Private by design.',
+      'Write Markdown and export polished PDF, DOCX, HTML, or text documents directly in your browser. Private by design.',
     path: '/',
   })
 
-  const { setMarkdown } = useDocument()
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const { markdown, setMarkdown } = useDocument()
+  const editorRef = useRef<MarkdownEditorHandle>(null)
   const upload = useFileUpload(setMarkdown)
   const [mobileTab, setMobileTab] = useState<MobileTab>('editor')
+  const [mode, setMode] = useState<WorkspaceMode>(loadWorkspaceMode)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [exportOpenSignal, setExportOpenSignal] = useState(0)
   const isDesktop = useMediaQuery('(min-width: 768px)')
 
+  useEffect(() => {
+    window.sessionStorage.setItem(WORKSPACE_MODE_KEY, mode)
+  }, [mode])
+
   const handleStartWriting = () => {
-    textareaRef.current?.focus()
+    editorRef.current?.focus()
     setMobileTab('editor')
+    setMode('editor')
   }
 
   const handleUploadClick = () => {
@@ -44,56 +53,84 @@ export function ConverterPage() {
     upload.openFilePicker()
   }
 
+  const handlePreview = useCallback(() => {
+    setMode('preview')
+    setMobileTab('preview')
+  }, [])
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const modifier = event.ctrlKey || event.metaKey
+      if (!modifier) return
+      const key = event.key.toLowerCase()
+      if (key === 's') {
+        // Autosave already runs continuously; just stop the browser's native save dialog.
+        event.preventDefault()
+      } else if (event.key === 'Enter') {
+        event.preventDefault()
+        handlePreview()
+      } else if (event.shiftKey && key === 'p') {
+        event.preventDefault()
+        setExportOpenSignal((value) => value + 1)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handlePreview])
+
+  const showHero = markdown.trim() === '' && !isFullscreen
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Hero onStartWriting={handleStartWriting} onUploadClick={handleUploadClick} />
+      {showHero && <Hero onStartWriting={handleStartWriting} onUploadClick={handleUploadClick} />}
 
-      <div className="flex items-center justify-between gap-2 border-b border-neutral-200 bg-white px-4 py-2 dark:border-neutral-800 dark:bg-neutral-950">
-        {isDesktop ? (
-          <button
-            type="button"
-            onClick={() => setSettingsOpen((v) => !v)}
-            aria-pressed={settingsOpen}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-              settingsOpen
-                ? 'bg-accent-100 text-accent-700 dark:bg-accent-950/50 dark:text-accent-300'
-                : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800'
-            }`}
-          >
-            {settingsOpen ? 'Hide settings' : 'Settings'}
-          </button>
-        ) : (
-          <div className="flex gap-1" role="tablist" aria-label="Workspace view">
-            {MOBILE_TABS.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={mobileTab === tab.id}
-                onClick={() => setMobileTab(tab.id)}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-                  mobileTab === tab.id
-                    ? 'bg-accent-100 text-accent-700 dark:bg-accent-950/50 dark:text-accent-300'
-                    : 'text-neutral-600 dark:text-neutral-300'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        )}
-        <ExportMenu />
-      </div>
+      {!isFullscreen && (
+        <EditorTopBar
+          isDesktop={isDesktop}
+          mode={mode}
+          onModeChange={setMode}
+          mobileTab={mobileTab}
+          onMobileTabChange={setMobileTab}
+          settingsOpen={settingsOpen}
+          onToggleSettings={() => setSettingsOpen((value) => !value)}
+          onUndo={() => editorRef.current?.undo()}
+          onRedo={() => editorRef.current?.redo()}
+          exportOpenSignal={exportOpenSignal}
+        />
+      )}
 
       <div className="min-h-0 flex-1">
-        {isDesktop ? (
+        {isFullscreen ? (
+          <EditorPanel
+            editorRef={editorRef}
+            upload={upload}
+            isFullscreen
+            onToggleFullscreen={() => setIsFullscreen(false)}
+          />
+        ) : isDesktop ? (
           <div className="flex h-full min-h-0">
             <div className="min-h-0 flex-1">
-              <ResizableSplit
-                storageKey="docmarkdown:split-ratio"
-                left={<EditorPanel textareaRef={textareaRef} upload={upload} />}
-                right={<PreviewPanel />}
-              />
+              {mode === 'split' && (
+                <ResizableSplit
+                  storageKey="docmarkdown:split-ratio"
+                  left={
+                    <EditorPanel
+                      editorRef={editorRef}
+                      upload={upload}
+                      onToggleFullscreen={() => setIsFullscreen(true)}
+                    />
+                  }
+                  right={<PreviewPanel />}
+                />
+              )}
+              {mode === 'editor' && (
+                <EditorPanel
+                  editorRef={editorRef}
+                  upload={upload}
+                  onToggleFullscreen={() => setIsFullscreen(true)}
+                />
+              )}
+              {mode === 'preview' && <PreviewPanel />}
             </div>
             {settingsOpen && (
               <div className="w-80 shrink-0 border-l border-neutral-200 dark:border-neutral-800">
@@ -106,7 +143,11 @@ export function ConverterPage() {
             <div
               className={mobileTab === 'editor' ? 'flex h-full min-h-0 w-full flex-col' : 'hidden'}
             >
-              <EditorPanel textareaRef={textareaRef} upload={upload} />
+              <EditorPanel
+                editorRef={editorRef}
+                upload={upload}
+                onToggleFullscreen={() => setIsFullscreen(true)}
+              />
             </div>
             <div
               className={mobileTab === 'preview' ? 'flex h-full min-h-0 w-full flex-col' : 'hidden'}

@@ -4,7 +4,7 @@ export interface NavLinkItem {
 }
 
 export const NAV_LINKS: NavLinkItem[] = [
-  { to: '/', label: 'Converter' },
+  { to: '/', label: 'Editor' },
   { to: '/word-to-pdf', label: 'Word to PDF' },
   { to: '/merge-pdf', label: 'Merge PDF' },
   { to: '/templates', label: 'Templates' },

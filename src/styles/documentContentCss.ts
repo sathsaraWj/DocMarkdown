@@ -1,3 +1,4 @@
+import { resolveTemplateColors } from '@/types/colors'
 import type { DocumentSettings } from '@/types/settings'
 import type { DocumentTemplate } from '@/types/template'
 import { FONT_FAMILY_OPTIONS } from '@/types/typography'
@@ -32,7 +33,7 @@ export function buildContentCss(
   fontOverride?: ContentFontOverride,
 ): string {
   const { typography, content } = settings
-  const { style } = template
+  const style = resolveTemplateColors(template.style, settings.colors)
   const bucketFonts = getFontStack(typography.fontFamily)
   const fonts = {
     body: fontOverride?.body ?? bucketFonts.body,
@@ -180,10 +181,41 @@ export function buildContentCss(
     border-top: 1px solid var(--doc-border-color);
     margin: 1.6em 0;
   }
+  .doc-content hr.docx-page-break {
+    border-top: 2px dashed var(--doc-border-color);
+    margin: 2rem 0;
+    break-after: page;
+    page-break-after: always;
+  }
   .doc-content img {
     max-width: 100%;
     height: auto;
     border-radius: 6px;
+  }
+  .doc-content .mermaid-diagram {
+    display: flex;
+    justify-content: center;
+    margin: 0 0 ${typography.paragraphSpacing}em;
+  }
+  .doc-content .mermaid-diagram svg {
+    max-width: 100%;
+    height: auto;
+  }
+  .doc-content .mermaid-diagram-source {
+    margin: 0;
+    padding: 0.9em 1em;
+    background: var(--doc-code-bg);
+    border-radius: 8px;
+    font-size: ${typography.codeFontSize}pt;
+    overflow-x: auto;
+  }
+  .doc-content .mermaid-error {
+    margin: 0 0 ${typography.paragraphSpacing}em;
+    padding: 0.75em 1em;
+    border-radius: 6px;
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 0.9em;
   }
   .doc-content .footnotes {
     margin-top: 2em;

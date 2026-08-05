@@ -26,13 +26,13 @@ describe('buildTextExport', () => {
 })
 
 describe('buildStandaloneHtml', () => {
-  it('produces a self-contained document with embedded styles and sanitized content', () => {
+  it('produces a self-contained document with embedded styles and sanitized content', async () => {
     const settings = {
       ...DEFAULT_DOCUMENT_SETTINGS,
       metadata: { ...DEFAULT_DOCUMENT_SETTINGS.metadata, title: 'Quarterly Report' },
     }
     const template = getTemplate(settings.templateId)
-    const result = buildStandaloneHtml(SAMPLE_MARKDOWN, settings, template)
+    const result = await buildStandaloneHtml(SAMPLE_MARKDOWN, settings, template)
 
     expect(result.filename).toBe('quarterly-report.html')
     expect(result.html).toContain('<!doctype html>')
@@ -41,13 +41,13 @@ describe('buildStandaloneHtml', () => {
     expect(result.html).not.toContain('<script>')
   })
 
-  it('includes a table of contents when generateToc is enabled', () => {
+  it('includes a table of contents when generateToc is enabled', async () => {
     const settings = {
       ...DEFAULT_DOCUMENT_SETTINGS,
       content: { ...DEFAULT_DOCUMENT_SETTINGS.content, generateToc: true },
     }
     const template = getTemplate(settings.templateId)
-    const result = buildStandaloneHtml('# One\n\n## Two', settings, template)
+    const result = await buildStandaloneHtml('# One\n\n## Two', settings, template)
     expect(result.html).toContain('doc-toc')
   })
 })

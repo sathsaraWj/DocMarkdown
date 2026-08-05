@@ -10,6 +10,7 @@ describe('SettingsPanel', () => {
     expect(screen.getByText('Template')).toBeInTheDocument()
     expect(screen.getByText('Page')).toBeInTheDocument()
     expect(screen.getByText('Typography')).toBeInTheDocument()
+    expect(screen.getByText('Colors')).toBeInTheDocument()
     expect(screen.getByText('Document metadata')).toBeInTheDocument()
     expect(screen.getByText(/header & footer/i)).toBeInTheDocument()
     expect(screen.getByText('Content options')).toBeInTheDocument()
@@ -50,6 +51,20 @@ describe('SettingsPanel', () => {
     const topMargin = screen.getByLabelText(/top \(mm\)/i) as HTMLInputElement
     fireEvent.change(topMargin, { target: { value: '42' } })
     expect((screen.getByLabelText('Margins') as HTMLSelectElement).value).toBe('custom')
+  })
+
+  it('overriding a color shows the current template swatch and a reset action', () => {
+    renderWithProviders(<SettingsPanel />)
+    const accentInput = screen.getByLabelText('Accent') as HTMLInputElement
+    // Clean template's default accent color.
+    expect(accentInput.value).toBe('#3b66f5')
+
+    fireEvent.change(accentInput, { target: { value: '#ff0000' } })
+    expect(accentInput.value).toBe('#ff0000')
+    expect(screen.getByRole('button', { name: /reset to template/i })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /reset to template/i }))
+    expect((screen.getByLabelText('Accent') as HTMLInputElement).value).toBe('#3b66f5')
   })
 
   it('opens a confirmation dialog before resetting settings', () => {

@@ -1,31 +1,16 @@
 import type { SaveStatus } from '@/app/DocumentContext'
+import type { EditorCursorPosition } from '@/components/editor/MarkdownEditor'
 import type { DocumentStats } from '@/hooks/useDocumentStats'
+import { SaveStatusIndicator } from './SaveStatusIndicator'
 
 interface EditorStatusBarProps {
   stats: DocumentStats
   saveStatus: SaveStatus
   lastEditedAt: string | null
+  cursor?: EditorCursorPosition
 }
 
-const SAVE_STATUS_LABEL: Record<SaveStatus, string> = {
-  saved: 'Saved locally',
-  saving: 'Saving…',
-  error: 'Could not save locally',
-  unavailable: 'Local storage unavailable',
-}
-
-function formatTimestamp(iso: string | null): string | null {
-  if (!iso) return null
-  try {
-    return new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
-  } catch {
-    return null
-  }
-}
-
-export function EditorStatusBar({ stats, saveStatus, lastEditedAt }: EditorStatusBarProps) {
-  const timestamp = formatTimestamp(lastEditedAt)
-
+export function EditorStatusBar({ stats, saveStatus, lastEditedAt, cursor }: EditorStatusBarProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -34,23 +19,16 @@ export function EditorStatusBar({ stats, saveStatus, lastEditedAt }: EditorStatu
         <span>{stats.characters.toLocaleString()} characters</span>
         <span aria-hidden="true">·</span>
         <span>{stats.readingTimeMinutes} min read</span>
+        {cursor && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>
+              Ln {cursor.line}, Col {cursor.column}
+            </span>
+          </>
+        )}
       </div>
-      <div className="flex items-center gap-2" role="status" aria-live="polite">
-        <span
-          className={`h-1.5 w-1.5 rounded-full ${
-            saveStatus === 'saved'
-              ? 'bg-emerald-500'
-              : saveStatus === 'saving'
-                ? 'bg-amber-500'
-                : 'bg-red-500'
-          }`}
-          aria-hidden="true"
-        />
-        <span>
-          {SAVE_STATUS_LABEL[saveStatus]}
-          {saveStatus === 'saved' && timestamp ? ` at ${timestamp}` : ''}
-        </span>
-      </div>
+      <SaveStatusIndicator saveStatus={saveStatus} lastEditedAt={lastEditedAt} />
     </div>
   )
 }
