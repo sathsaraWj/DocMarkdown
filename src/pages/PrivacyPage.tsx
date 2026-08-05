@@ -1,0 +1,101 @@
+import { Link } from 'react-router-dom'
+
+import { usePageMeta } from '@/hooks/usePageMeta'
+
+export default function PrivacyPage() {
+  usePageMeta({
+    title: 'Privacy Policy',
+    description:
+      'How DocMarkdown handles your documents and data: everything stays in your browser.',
+    path: '/privacy',
+  })
+
+  return (
+    <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
+      <h1 className="text-2xl font-bold text-neutral-900 dark:text-white sm:text-3xl">
+        Privacy Policy
+      </h1>
+      <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">Last updated: 2026</p>
+
+      <div className="prose-sm mt-8 flex flex-col gap-6 text-neutral-700 dark:text-neutral-300">
+        <section>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
+            Markdown processing happens in your browser
+          </h2>
+          <p className="mt-2">
+            DocMarkdown parses, renders, and exports your Markdown entirely on your device using
+            JavaScript running in your browser. Your document text is never transmitted to a
+            DocMarkdown server, because DocMarkdown does not operate a server that receives document
+            content.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
+            Files are not uploaded anywhere
+          </h2>
+          <p className="mt-2">
+            When you upload a <code>.md</code> or <code>.txt</code> file, or drag one into the
+            editor, it is read directly by your browser using the File API. The file's contents
+            populate the editor locally and are not sent to any server as part of this process.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
+            Drafts and settings are stored only in your browser
+          </h2>
+          <p className="mt-2">
+            Your current Markdown, selected template, page and typography settings, and theme
+            preference are saved to your browser's local storage so you can pick up where you left
+            off after a refresh. This data stays on your device and is not synced to any account or
+            cloud service, because DocMarkdown does not have accounts or cloud storage in this
+            version.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
+            You can delete your local data at any time
+          </h2>
+          <p className="mt-2">
+            Open the Settings panel from the converter page and choose{' '}
+            <strong>Delete all local data</strong> to permanently remove your saved draft, settings,
+            and theme preference from this browser. You can also clear this data using your
+            browser's own site-data controls.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
+            No account is required
+          </h2>
+          <p className="mt-2">
+            DocMarkdown does not require sign-up, sign-in, or any personal information to use its
+            core features.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Analytics</h2>
+          <p className="mt-2">
+            Third-party analytics are not enabled by default. If a future deployment of this project
+            enables a privacy-friendly analytics provider, that will be reflected in this policy and
+            gated behind an explicit configuration flag, not enabled silently.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Questions</h2>
+          <p className="mt-2">
+            If you have questions about this policy, visit the{' '}
+            <Link to="/contact" className="text-accent-600 underline dark:text-accent-400">
+              Contact page
+            </Link>
+            .
+          </p>
+        </section>
+      </div>
+    </div>
+  )
+}

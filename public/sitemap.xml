@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://docmarkdown.app/</loc><priority>1.0</priority></url>
+  <url><loc>https://docmarkdown.app/templates</loc><priority>0.8</priority></url>
+  <url><loc>https://docmarkdown.app/markdown-guide</loc><priority>0.8</priority></url>
+  <url><loc>https://docmarkdown.app/about</loc><priority>0.5</priority></url>
+  <url><loc>https://docmarkdown.app/privacy</loc><priority>0.4</priority></url>
+  <url><loc>https://docmarkdown.app/terms</loc><priority>0.4</priority></url>
+  <url><loc>https://docmarkdown.app/contact</loc><priority>0.4</priority></url>
+</urlset>
