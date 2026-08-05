@@ -3,13 +3,15 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { Footer } from './Footer'
 import { Header } from './Header'
 
+const WORKSPACE_ROUTES = new Set(['/', '/word-to-pdf'])
+
 export function SiteLayout() {
   const location = useLocation()
-  const isConverter = location.pathname === '/'
+  const isWorkspace = WORKSPACE_ROUTES.has(location.pathname)
 
   return (
     <div
-      className={`flex flex-col bg-neutral-50 dark:bg-neutral-950 ${isConverter ? 'h-svh overflow-hidden' : 'min-h-svh'}`}
+      className={`flex flex-col bg-neutral-50 dark:bg-neutral-950 ${isWorkspace ? 'h-svh overflow-hidden' : 'min-h-svh'}`}
     >
       <a
         href="#main-content"
@@ -20,7 +22,7 @@ export function SiteLayout() {
       <Header />
       <main
         id="main-content"
-        className={`flex flex-1 flex-col ${isConverter ? 'min-h-0 overflow-hidden' : ''}`}
+        className={`flex flex-1 flex-col ${isWorkspace ? 'min-h-0 overflow-hidden' : ''}`}
       >
         <Outlet />
       </main>

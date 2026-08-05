@@ -1,10 +1,13 @@
-import { useDocument } from '@/app/DocumentContext'
+import type { HeaderFooterSettings } from '@/types/headerFooter'
 import { SectionHeading, TextField, ToggleField } from './fields'
 
-export function HeaderFooterSettingsSection() {
-  const { settings, setSettings } = useDocument()
-  const { headerFooter } = settings
+export interface HeaderFooterSettingsSectionProps {
+  headerFooter: HeaderFooterSettings
+  onChange: (updater: (prev: HeaderFooterSettings) => HeaderFooterSettings) => void
+}
 
+/** Pure, prop-driven header/footer controls shared by the Markdown and Word converters. */
+export function HeaderFooterSettingsSection({ headerFooter, onChange }: HeaderFooterSettingsSectionProps) {
   return (
     <div className="flex flex-col gap-3">
       <SectionHeading>Header &amp; footer</SectionHeading>
@@ -12,42 +15,28 @@ export function HeaderFooterSettingsSection() {
       <ToggleField
         label="Enable header"
         checked={headerFooter.headerEnabled}
-        onChange={(headerEnabled) =>
-          setSettings((prev) => ({
-            ...prev,
-            headerFooter: { ...prev.headerFooter, headerEnabled },
-          }))
-        }
+        onChange={(headerEnabled) => onChange((prev) => ({ ...prev, headerEnabled }))}
       />
       {headerFooter.headerEnabled && (
         <TextField
           label="Custom header text"
           value={headerFooter.headerText}
           placeholder="Leave blank to use the options below"
-          onChange={(headerText) =>
-            setSettings((prev) => ({ ...prev, headerFooter: { ...prev.headerFooter, headerText } }))
-          }
+          onChange={(headerText) => onChange((prev) => ({ ...prev, headerText }))}
         />
       )}
 
       <ToggleField
         label="Enable footer"
         checked={headerFooter.footerEnabled}
-        onChange={(footerEnabled) =>
-          setSettings((prev) => ({
-            ...prev,
-            headerFooter: { ...prev.headerFooter, footerEnabled },
-          }))
-        }
+        onChange={(footerEnabled) => onChange((prev) => ({ ...prev, footerEnabled }))}
       />
       {headerFooter.footerEnabled && (
         <TextField
           label="Custom footer text"
           value={headerFooter.footerText}
           placeholder="Leave blank to use the options below"
-          onChange={(footerText) =>
-            setSettings((prev) => ({ ...prev, headerFooter: { ...prev.headerFooter, footerText } }))
-          }
+          onChange={(footerText) => onChange((prev) => ({ ...prev, footerText }))}
         />
       )}
 
@@ -55,32 +44,17 @@ export function HeaderFooterSettingsSection() {
         <ToggleField
           label="Show page number"
           checked={headerFooter.showPageNumber}
-          onChange={(showPageNumber) =>
-            setSettings((prev) => ({
-              ...prev,
-              headerFooter: { ...prev.headerFooter, showPageNumber },
-            }))
-          }
+          onChange={(showPageNumber) => onChange((prev) => ({ ...prev, showPageNumber }))}
         />
         <ToggleField
           label="Show document title"
           checked={headerFooter.showDocTitle}
-          onChange={(showDocTitle) =>
-            setSettings((prev) => ({
-              ...prev,
-              headerFooter: { ...prev.headerFooter, showDocTitle },
-            }))
-          }
+          onChange={(showDocTitle) => onChange((prev) => ({ ...prev, showDocTitle }))}
         />
         <ToggleField
           label="Show export date"
           checked={headerFooter.showExportDate}
-          onChange={(showExportDate) =>
-            setSettings((prev) => ({
-              ...prev,
-              headerFooter: { ...prev.headerFooter, showExportDate },
-            }))
-          }
+          onChange={(showExportDate) => onChange((prev) => ({ ...prev, showExportDate }))}
         />
       </div>
     </div>

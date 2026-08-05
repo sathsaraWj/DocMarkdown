@@ -1,4 +1,6 @@
-import { LockIcon, UploadIcon } from '@/components/common/icons'
+import { Link } from 'react-router-dom'
+
+import { FileTextIcon, LockIcon, UploadIcon } from '@/components/common/icons'
 
 interface HeroProps {
   onStartWriting: () => void
@@ -16,6 +18,16 @@ export function Hero({ onStartWriting, onUploadClick }: HeroProps) {
           <p className="mt-1 max-w-2xl text-sm text-neutral-600 dark:text-neutral-300">
             Write or paste Markdown and export polished PDF, HTML, or text documents — directly in
             your browser. Your documents never leave your device.
+          </p>
+          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+            Have a Word document instead?{' '}
+            <Link
+              to="/word-to-pdf"
+              className="inline-flex items-center gap-1 font-medium text-accent-600 underline underline-offset-2 hover:text-accent-700 dark:text-accent-400"
+            >
+              <FileTextIcon className="h-3.5 w-3.5" />
+              Convert Word to PDF
+            </Link>
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">

@@ -1,18 +1,23 @@
 # DocMarkdown
 
-**Convert Markdown into clean, professional PDFs directly in your browser. Your documents never leave your device.**
+**Convert Markdown — and now Word documents — into clean, professional PDFs directly in your browser. Your documents never leave your device.**
 
-DocMarkdown is a privacy-focused, fully client-side Markdown to PDF converter.
+DocMarkdown is a privacy-focused, fully client-side document-to-PDF converter.
 Write or paste Markdown, watch a live paginated preview update as you type,
 choose from five document templates, tune page/typography/header/footer
 settings, and export to **PDF**, standalone **HTML**, **Markdown**, or **plain
 text** — all without a network request. There is no backend, no account, and
 no document upload step, because there is nowhere for your document to go.
 
+DocMarkdown also includes a **Word to PDF Converter** (`/word-to-pdf`): drop
+in a `.docx` file and it's parsed, previewed, and exported entirely in the
+same browser tab — no upload, no server-side conversion.
+
 ## Table of contents
 
 - [Product overview](#product-overview)
 - [Feature list](#feature-list)
+- [Word to PDF converter](#word-to-pdf-converter)
 - [Technology stack](#technology-stack)
 - [Local setup](#local-setup)
 - [Development commands](#development-commands)
@@ -24,6 +29,7 @@ no document upload step, because there is nowhere for your document to go.
 - [Export limitations](#export-limitations)
 - [Browser support](#browser-support)
 - [Project structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
 - [Future improvement ideas](#future-improvement-ideas)
 
 ## Product overview
@@ -63,6 +69,64 @@ syntax highlighting, and PDF layout — runs in the browser's JavaScript engine.
 - Interactive Markdown syntax guide with live rendered examples and copy
   buttons
 - Privacy, Terms, About, and Contact pages; a custom 404 page
+- A second converter, **Word to PDF** (`/word-to-pdf`), covered in its own
+  section below
+
+## Word to PDF converter
+
+`/word-to-pdf` converts `.docx` Word documents to PDF, entirely client-side.
+
+- **Upload**: drag-and-drop or browse for a `.docx` file (up to
+  `VITE_MAX_WORD_UPLOAD_SIZE_MB`, default 10 MB). Only `.docx` is accepted —
+  legacy `.doc` files are explicitly rejected with a message asking the user
+  to save as `.docx`; empty, corrupt, and password-protected files are
+  detected and reported with a friendly error instead of a silent failure or
+  crash.
+- **Local parsing only**: the file is read with `FileReader`/`arrayBuffer()`
+  and converted in-memory by [mammoth](https://github.com/mtingers/mammoth.js)
+  (`mammoth.convertToHtml`), which turns the DOCX's internal XML into HTML —
+  no server, no third-party API, nothing uploaded. The resulting HTML is
+  passed through the same `sanitizeHtml()` (DOMPurify) used everywhere else
+  in the app before it is ever rendered.
+- **Preview**: reuses the Markdown converter's paginated paper preview
+  (`DocumentPaper`, `PreviewToolbar`, zoom/fit-to-width) — same page sizes,
+  margins, and zoom behavior as the Markdown side.
+- **Settings**: page size/orientation/margins and header/footer options are
+  the same shared components used by the Markdown converter. An optional
+  "Normalize document styling" toggle lets you apply a DocMarkdown template
+  and typography (font family, body size, line height) instead of the
+  extracted Word styling, which is used by default. Image handling
+  (include/exclude, client-side re-compression, quality slider) is
+  Word-specific, since embedded images can otherwise bloat the exported PDF.
+- **Export**: PDF (via the same shared `renderHtmlToPdf` layout engine the
+  Markdown converter uses), standalone self-contained HTML, and plain text.
+- **Conversion warnings**: mammoth reports anything it couldn't map cleanly
+  (e.g. an unsupported image type), shown in a dedicated, non-dismissable
+  warnings panel alongside a standing disclosure of known formatting
+  limitations — see below. Warnings are informational, not blocking.
+
+### What doesn't convert perfectly
+
+Word's format supports far more visual layout than HTML/PDF can represent
+1:1. The following are **not** preserved, or are simplified:
+
+- Text boxes, floating images, and image wrapping/positioning
+- SmartArt, charts, and drawn shapes
+- Macros and embedded OLE objects/files
+- Multi-column section layouts
+- Section-specific page margins (only the document's primary margins apply)
+- Track changes and comments
+- Custom/embedded fonts (PDF export uses jsPDF's core fonts, same as the
+  Markdown converter)
+- Complex/merged table structures
+- Footnotes, endnotes, and watermarks
+- Advanced headers/footers (only the DocMarkdown-managed header/footer text
+  and page numbers are applied on export)
+
+What **is** preserved: headings, paragraphs, bold/italic/underline, ordered
+and nested unordered lists, tables, hyperlinks, embedded images, basic text
+alignment, and blockquotes (where mammoth can identify them from the source
+document's styles). The UI never claims the result is pixel-perfect.
 
 ## Technology stack
 
@@ -73,6 +137,7 @@ syntax highlighting, and PDF layout — runs in the browser's JavaScript engine.
 | Styling                | Tailwind CSS v4                                                                          |
 | Routing                | React Router 7 (lazy-loaded secondary routes)                                            |
 | Markdown parsing       | Marked, with a custom renderer for heading IDs/TOC/numbering and syntax highlighting     |
+| Word (.docx) parsing   | [mammoth](https://github.com/mtingers/mammoth.js) (browser build), DOCX XML → HTML       |
 | Sanitization           | DOMPurify (every render path, no exceptions)                                             |
 | Syntax highlighting    | highlight.js (core + a curated language set)                                             |
 | PDF generation         | jsPDF, driven by a hand-built layout engine (see below) — no `html2canvas` rasterization |
@@ -122,11 +187,31 @@ interface (including drag state and error handling), the clear-content
 confirmation flow, the settings panel (including template switching and the
 reset/delete confirmations), and the theme switcher.
 
+For the Word to PDF converter, unit/component coverage additionally includes:
+`.docx` file validation (extension/MIME/size/empty checks), legacy `.doc`
+rejection, corrupt/password-protected file detection via ZIP/OLE signature
+sniffing, DOCX→HTML parsing and title extraction (against a real fixture
+`.docx`), Word HTML sanitization, plain-text extraction, image
+include/exclude/compression handling (including a jsdom-safe timeout fallback
+for image re-compression), PDF/HTML/text export builders, the upload zone
+(drag state, keyboard activation, disabled state), the conversion-warnings
+panel, the export panel, the settings panel (normalize-styling and
+image-options visibility toggling), and page-level replace/clear/`.doc`-
+rejection flows using a hand-built fixture `.docx`.
+
 Playwright covers: typing Markdown and seeing the live preview, uploading a
 `.md` file, applying a template, changing page settings, refreshing to
 restore a saved draft, exporting Markdown, exporting HTML, exporting PDF
 (asserting a valid, non-empty `%PDF-` file), deleting local data, and using
 the converter on a mobile viewport (Editor/Preview/Settings tabs).
+
+For Word to PDF (`e2e/word-to-pdf.spec.ts`), Playwright covers: opening the
+page, uploading a valid `.docx` and seeing the converted content in the
+preview, changing page orientation, enabling "Normalize document styling",
+exporting PDF (asserting a valid, non-empty `%PDF-` file), downloading
+standalone HTML, replacing the current file, rejecting a legacy `.doc` file,
+rejecting an oversized file, rejecting a corrupt file, clearing the document,
+and using the converter on a mobile viewport (`e2e/mobile.spec.ts`).
 
 Playwright needs browser binaries once per machine:
 
@@ -205,6 +290,7 @@ optional with a safe default.
 | `VITE_GITHUB_URL`         | GitHub link shown in the header                                        | `https://github.com`      |
 | `VITE_SITE_URL`           | Canonical URL used for SEO meta tags                                   | `https://docmarkdown.app` |
 | `VITE_MAX_UPLOAD_SIZE_MB` | Max size for uploaded `.md`/`.txt` files                               | `5`                       |
+| `VITE_MAX_WORD_UPLOAD_SIZE_MB` | Max size for uploaded `.docx` files (Word to PDF converter)       | `10`                      |
 | `VITE_ENABLE_ANALYTICS`   | Enables the analytics abstraction (no-op until a provider is wired in) | `false`                   |
 
 ## Privacy architecture
@@ -216,8 +302,14 @@ optional with a safe default.
 - **Local-only persistence.** Drafts, settings, and theme preference are
   stored in `localStorage` under one versioned key (`docmarkdown:state`),
   read and written only by `src/services/storage`.
-- **File uploads never leave the browser.** Uploaded files are read via the
-  `FileReader` API directly into memory.
+- **File uploads never leave the browser.** Uploaded files (Markdown/text and
+  Word `.docx`) are read via the `FileReader`/`arrayBuffer()` APIs directly
+  into memory.
+- **Word documents are never persisted.** Unlike the Markdown editor's draft,
+  an uploaded `.docx` and its parsed HTML are kept only in React state for the
+  lifetime of the tab — nothing is written to `localStorage`. Removing the
+  document (Clear) or navigating away discards it; object URLs created for
+  export downloads are revoked after use.
 - **Sanitization is mandatory, not optional.** Every HTML render path
   (preview, HTML export, PDF text extraction) passes through
   `sanitizeHtml()` (DOMPurify), which also forces
@@ -318,36 +410,79 @@ src/
   components/
     layout/        Header, Footer, Hero, mobile nav, theme switcher
     editor/         Markdown editor, formatting toolbar, resizable split
-    preview/        Paginated document preview, zoom controls
+    preview/        Paginated document preview, zoom controls (shared by both
+                    the Markdown and Word to PDF converters)
     settings/       Page/typography/metadata/header-footer/content settings
+                    (prop-driven where shared with the Word converter)
     export/         Export menu/progress UI
     guide/          Markdown guide example/rendered-output cards
+    word/           Word to PDF UI: upload zone, document info, conversion
+                    warnings, preview wrapper, settings panel, export panel
     common/         Icons, confirm dialog, loading fallback
   pages/           One component per route (see "Main pages" below)
   hooks/           useDocumentStats, useFileUpload, useMarkdownFormatting,
-                   useRenderedMarkdown, usePreviewZoom, useMediaQuery, etc.
+                   useRenderedMarkdown, usePreviewZoom, useMediaQuery,
+                   useWordDocument, useWordFileDrop, useWordExport, etc.
   services/
     markdown/       Marked configuration, footnotes, sanitize, plain-text
-    pdf/            Block model, HTML->block parser, jsPDF layout engine
-    export/         HTML/Markdown/text export builders + orchestration
+    word/           DOCX validation, mammoth parsing, HTML sanitization,
+                    plain-text extraction, image include/compress handling
+    pdf/            Block model, HTML->block parser, shared jsPDF layout
+                    engine (`renderHtmlToPdf`) used by both converters
+    export/         HTML/Markdown/text export builders + orchestration for
+                    both Markdown and Word documents
     storage/        Versioned localStorage persistence + settings JSON I/O
     analytics/       Disabled-by-default analytics abstraction
   templates/       The five document templates (data + starter content)
-  types/           Shared TypeScript types (settings, page, typography, ...)
+  types/           Shared TypeScript types (settings, page, typography,
+                   word, ...)
   utils/           Small pure helpers (filename sanitizing, color, text, ...)
   styles/          Shared document content CSS (used by preview + HTML export)
 e2e/               Playwright specs
+  fixtures/         Small hand-built .docx/.doc fixtures used by Word to PDF
+                    unit and e2e tests (no real-world/copyrighted content)
 ```
 
 ### Main pages
 
-`/` converter · `/templates` · `/markdown-guide` · `/privacy` · `/terms` ·
-`/about` · `/contact` · `*` 404.
+`/` Markdown converter · `/word-to-pdf` Word to PDF converter · `/templates`
+· `/markdown-guide` · `/privacy` · `/terms` · `/about` · `/contact` · `*` 404.
+
+## Troubleshooting
+
+- **"Legacy .doc files are not supported."** Only the modern `.docx` (Office
+  Open XML) format is supported. Open the file in Word (or a compatible
+  editor) and use "Save As" → **Word Document (.docx)**, then re-upload.
+- **"The document could not be read. It may be corrupted or
+  password-protected."** DocMarkdown detects this from the file's binary
+  signature before attempting to parse it. Password-protected/encrypted
+  `.docx` files can't be read client-side without the password (there is
+  nowhere to enter one), so remove protection in Word first
+  (Review → Protect → Restrict Editing, or File → Info → Protect Document)
+  and re-export as an unprotected `.docx`.
+- **"This file is larger than the N MB upload limit."** Raise
+  `VITE_MAX_WORD_UPLOAD_SIZE_MB` in your `.env` if you control the deployment
+  and need to accept larger files; otherwise reduce the document's size
+  (compress or remove large embedded images) and re-upload.
+- **A table/image/layout doesn't look right after conversion.** See
+  [What doesn't convert perfectly](#what-doesnt-convert-perfectly) — the
+  conversion warnings panel (shown after a successful upload) lists anything
+  the parser specifically couldn't map for your document.
+- **Vitest can't resolve `mammoth`.** `mammoth`'s package.json `"browser"`
+  field remap only applies to Vite's client build, not Vitest's Node-based
+  test runner, so `vite.config.ts` aliases `mammoth` to
+  `mammoth/mammoth.browser.js` specifically when `process.env.VITEST` is set.
+  If you see `Could not find file in options` errors from mammoth in tests,
+  confirm that alias is still present.
 
 ## Future improvement ideas
 
 - Per-token syntax-highlight coloring in PDF export (would require mapping
   highlight.js token spans into styled PDF text runs)
+- Word to PDF: content-aware table column sizing and clickable internal PDF
+  links, matching the same future work already planned for Markdown (below)
+- Word to PDF: an opt-in, best-effort mapping of DOCX section/multi-column
+  layout into the PDF output, clearly labeled as approximate
 - Content-aware PDF table column sizing
 - Clickable internal PDF links for the table of contents and footnotes
 - IndexedDB-backed multi-document draft history (currently a single draft)

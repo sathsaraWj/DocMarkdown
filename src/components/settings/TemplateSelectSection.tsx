@@ -1,22 +1,26 @@
-import { useDocument } from '@/app/DocumentContext'
 import { TEMPLATE_LIST } from '@/templates'
+import type { TemplateId } from '@/types/template'
 import { SectionHeading } from './fields'
 
-export function TemplateSelectSection() {
-  const { settings, setSettings } = useDocument()
+export interface TemplateSelectSectionProps {
+  templateId: TemplateId
+  onChange: (templateId: TemplateId) => void
+}
 
+/** Pure, prop-driven template picker shared by the Markdown and Word converters. */
+export function TemplateSelectSection({ templateId, onChange }: TemplateSelectSectionProps) {
   return (
     <div className="flex flex-col gap-2">
       <SectionHeading>Template</SectionHeading>
       <div className="grid grid-cols-1 gap-2">
         {TEMPLATE_LIST.map((template) => {
-          const active = settings.templateId === template.id
+          const active = templateId === template.id
           return (
             <button
               key={template.id}
               type="button"
               aria-pressed={active}
-              onClick={() => setSettings((prev) => ({ ...prev, templateId: template.id }))}
+              onClick={() => onChange(template.id)}
               className={`flex items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition-colors ${
                 active
                   ? 'border-accent-500 bg-accent-50 text-accent-800 dark:bg-accent-950/40 dark:text-accent-200'

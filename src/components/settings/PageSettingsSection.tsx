@@ -1,6 +1,5 @@
-import { useDocument } from '@/app/DocumentContext'
 import { MARGIN_PRESETS_MM } from '@/types/page'
-import type { MarginPreset, Orientation, PageSize } from '@/types/page'
+import type { MarginPreset, Orientation, PageSettings, PageSize } from '@/types/page'
 import { NumberField, SectionHeading, SelectField } from './fields'
 
 const PAGE_SIZE_OPTIONS: { value: PageSize; label: string }[] = [
@@ -22,10 +21,13 @@ const MARGIN_PRESET_OPTIONS: { value: MarginPreset; label: string }[] = [
   { value: 'custom', label: 'Custom' },
 ]
 
-export function PageSettingsSection() {
-  const { settings, setSettings } = useDocument()
-  const { page } = settings
+export interface PageSettingsSectionProps {
+  page: PageSettings
+  onChange: (updater: (prev: PageSettings) => PageSettings) => void
+}
 
+/** Pure, prop-driven page/margin controls shared by the Markdown and Word converters. */
+export function PageSettingsSection({ page, onChange }: PageSettingsSectionProps) {
   return (
     <div className="flex flex-col gap-4">
       <SectionHeading>Page</SectionHeading>
@@ -34,15 +36,13 @@ export function PageSettingsSection() {
           label="Page size"
           value={page.size}
           options={PAGE_SIZE_OPTIONS}
-          onChange={(size) => setSettings((prev) => ({ ...prev, page: { ...prev.page, size } }))}
+          onChange={(size) => onChange((prev) => ({ ...prev, size }))}
         />
         <SelectField
           label="Orientation"
           value={page.orientation}
           options={ORIENTATION_OPTIONS}
-          onChange={(orientation) =>
-            setSettings((prev) => ({ ...prev, page: { ...prev.page, orientation } }))
-          }
+          onChange={(orientation) => onChange((prev) => ({ ...prev, orientation }))}
         />
       </div>
 
@@ -51,14 +51,10 @@ export function PageSettingsSection() {
         value={page.marginPreset}
         options={MARGIN_PRESET_OPTIONS}
         onChange={(marginPreset) =>
-          setSettings((prev) => ({
+          onChange((prev) => ({
             ...prev,
-            page: {
-              ...prev.page,
-              marginPreset,
-              margins:
-                marginPreset === 'custom' ? prev.page.margins : MARGIN_PRESETS_MM[marginPreset],
-            },
+            marginPreset,
+            margins: marginPreset === 'custom' ? prev.margins : MARGIN_PRESETS_MM[marginPreset],
           }))
         }
       />
@@ -71,13 +67,10 @@ export function PageSettingsSection() {
           min={0}
           max={100}
           onChange={(top) =>
-            setSettings((prev) => ({
+            onChange((prev) => ({
               ...prev,
-              page: {
-                ...prev.page,
-                marginPreset: 'custom',
-                margins: { ...prev.page.margins, top },
-              },
+              marginPreset: 'custom',
+              margins: { ...prev.margins, top },
             }))
           }
         />
@@ -88,13 +81,10 @@ export function PageSettingsSection() {
           min={0}
           max={100}
           onChange={(right) =>
-            setSettings((prev) => ({
+            onChange((prev) => ({
               ...prev,
-              page: {
-                ...prev.page,
-                marginPreset: 'custom',
-                margins: { ...prev.page.margins, right },
-              },
+              marginPreset: 'custom',
+              margins: { ...prev.margins, right },
             }))
           }
         />
@@ -105,13 +95,10 @@ export function PageSettingsSection() {
           min={0}
           max={100}
           onChange={(bottom) =>
-            setSettings((prev) => ({
+            onChange((prev) => ({
               ...prev,
-              page: {
-                ...prev.page,
-                marginPreset: 'custom',
-                margins: { ...prev.page.margins, bottom },
-              },
+              marginPreset: 'custom',
+              margins: { ...prev.margins, bottom },
             }))
           }
         />
@@ -122,13 +109,10 @@ export function PageSettingsSection() {
           min={0}
           max={100}
           onChange={(left) =>
-            setSettings((prev) => ({
+            onChange((prev) => ({
               ...prev,
-              page: {
-                ...prev.page,
-                marginPreset: 'custom',
-                margins: { ...prev.page.margins, left },
-              },
+              marginPreset: 'custom',
+              margins: { ...prev.margins, left },
             }))
           }
         />

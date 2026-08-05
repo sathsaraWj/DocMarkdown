@@ -17,6 +17,15 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
+        // Vitest executes test files through Vite's SSR/Node module runner,
+        // which does not apply package.json's "browser" field remapping the
+        // way a real client build does — so plain `import 'mammoth'` would
+        // resolve to mammoth's Node-only entry (which rejects the
+        // {arrayBuffer} input our code uses) during tests. Point tests at
+        // mammoth's own bundled standalone browser build instead; the real
+        // app build is unaffected since this alias only applies under
+        // Vitest (process.env.VITEST).
+        ...(process.env.VITEST ? { mammoth: 'mammoth/mammoth.browser.js' } : {}),
       },
     },
     build: {

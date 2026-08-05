@@ -6,6 +6,7 @@ import { PageLoadingFallback } from '@/components/common/PageLoadingFallback'
 import { SiteLayout } from '@/components/layout/SiteLayout'
 import { ConverterPage } from '@/pages/ConverterPage'
 
+const WordToPdfPage = lazy(() => import('@/pages/WordToPdfPage'))
 const TemplatesPage = lazy(() => import('@/pages/TemplatesPage'))
 const MarkdownGuidePage = lazy(() => import('@/pages/MarkdownGuidePage'))
 const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'))
@@ -23,6 +24,7 @@ export function AppRouter() {
     <Routes>
       <Route element={<SiteLayout />}>
         <Route index element={<ConverterPage />} />
+        <Route path="word-to-pdf" element={withSuspense(<WordToPdfPage />)} />
         <Route path="templates" element={withSuspense(<TemplatesPage />)} />
         <Route path="markdown-guide" element={withSuspense(<MarkdownGuidePage />)} />
         <Route path="privacy" element={withSuspense(<PrivacyPage />)} />

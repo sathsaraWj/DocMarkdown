@@ -1,0 +1,5 @@
+export * from './parseDocx'
+export * from './wordFileValidation'
+export * from './wordHtmlSanitizer'
+export * from './wordImageProcessing'
+export * from './wordToPlainText'

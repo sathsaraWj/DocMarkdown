@@ -43,6 +43,20 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
+            Word document conversion also stays on your device
+          </h2>
+          <p className="mt-2">
+            The Word to PDF converter reads your <code>.docx</code> file and converts it to HTML
+            entirely in your browser's memory using a local JavaScript library — the file is never
+            uploaded to a server, sent to a third-party conversion API, or transmitted anywhere.
+            Extracted content is not saved to local storage; it exists only in memory for as long as
+            the tab is open, and is cleared immediately when you remove, replace, or navigate away
+            from the document.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
             Drafts and settings are stored only in your browser
           </h2>
           <p className="mt-2">
