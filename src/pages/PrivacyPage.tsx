@@ -88,23 +88,21 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Advertising</h2>
           <p className="mt-2">
-            This site uses Google AdSense to display ads. AdSense may set cookies or use similar
-            technologies in your browser, collect information such as your IP address and device
-            type, and use that information (including data from other sites you've visited) to show
-            ads it thinks are relevant to you. This is separate from, and unrelated to, your Markdown
-            content — AdSense has no access to what you write or export.
+            This site uses Google AdSense to display ads. Third-party vendors, including Google,
+            use cookies (such as the Google DoubleClick cookie) to serve ads based on a user's
+            prior visits to this and other websites. Google's use of advertising cookies enables it
+            and its partners to serve ads based on your visit to this site and/or other sites on
+            the internet. AdSense may also collect information such as your IP address, device
+            type, and approximate location as part of this process.
           </p>
           <p className="mt-2">
-            You can learn more about how Google uses data from sites that use its services at{' '}
-            <a
-              href="https://policies.google.com/technologies/partner-sites"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent-600 underline dark:text-accent-400"
-            >
-              How Google uses information from sites that use our services
-            </a>
-            , and you can opt out of personalized advertising at{' '}
+            This is separate from, and unrelated to, your Markdown content — AdSense has no access
+            to what you write, upload, or export, since that data never leaves your browser in the
+            first place (see above). We do not control these third-party cookies, and this policy
+            does not apply to them.
+          </p>
+          <p className="mt-2">
+            You can opt out of personalized advertising by visiting{' '}
             <a
               href="https://adssettings.google.com"
               target="_blank"
@@ -112,6 +110,25 @@ export default function PrivacyPage() {
               className="text-accent-600 underline dark:text-accent-400"
             >
               Google Ads Settings
+            </a>
+            , or opt out of a third-party vendor's use of cookies for personalized advertising by
+            visiting{' '}
+            <a
+              href="https://optout.aboutads.info"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent-600 underline dark:text-accent-400"
+            >
+              www.aboutads.info
+            </a>
+            . Learn more about how Google uses data at{' '}
+            <a
+              href="https://policies.google.com/technologies/partner-sites"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent-600 underline dark:text-accent-400"
+            >
+              How Google uses information from sites that use our services
             </a>
             .
           </p>

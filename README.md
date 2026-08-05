@@ -230,11 +230,14 @@ optional with a safe default.
   the analytics abstraction stays fully disabled unless a deployer opts in,
   and even then no provider is implemented out of the box.
 - **Google AdSense.** The deployed site (`index.html`) loads the AdSense
-  script (`pagead2.googlesyndication.com`) to display ads. This is unrelated
-  to document processing — your Markdown content still never leaves your
-  browser — but it is a third-party script that can set cookies for ad
-  personalization. Disclosed on `/privacy`; remove the `<script>` tag from
-  `index.html` if you don't want ads in your own deployment.
+  script (`pagead2.googlesyndication.com`) to display ads, and `public/ads.txt`
+  declares the site's authorized ad-seller relationship (required by AdSense's
+  publisher policies — see [AdSense Program Policies](https://support.google.com/adsense/answer/48182)).
+  This is unrelated to document processing — your Markdown content still
+  never leaves your browser — but it is a third-party script that can set
+  cookies for ad personalization. Disclosed on `/privacy`; remove the
+  `<script>` tag from `index.html` and `public/ads.txt` if you don't want ads
+  in your own deployment.
 
 See `/privacy` in the running app for the user-facing version of this policy.
 
