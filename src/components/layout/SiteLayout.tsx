@@ -24,7 +24,7 @@ export function SiteLayout() {
       >
         <Outlet />
       </main>
-      {!isConverter && <Footer />}
+      <Footer />
     </div>
   )
 }
