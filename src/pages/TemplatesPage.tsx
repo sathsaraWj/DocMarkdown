@@ -1,28 +1,47 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { useDocument } from '@/app/DocumentContext'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { usePageMeta } from '@/hooks/usePageMeta'
+import { renderMarkdown } from '@/services/markdown'
+import { buildContentCss } from '@/styles/documentContentCss'
 import { TEMPLATE_LIST } from '@/templates'
+import { DEFAULT_DOCUMENT_SETTINGS } from '@/types/settings'
 import type { DocumentTemplate } from '@/types/template'
+
+/**
+ * A miniature, non-interactive render of the template's starter content,
+ * scaled down and clipped to act as a visual preview. Each instance gets its
+ * own CSS scope class (see buildContentCss) because several of these render
+ * on the page at once, each with different template colors.
+ */
+function TemplatePreview({ template }: { template: DocumentTemplate }) {
+  const scopeClass = `doc-preview-${template.id}`
+  const html = useMemo(() => renderMarkdown(template.starterContent).html, [template])
+  const contentCss = useMemo(
+    () => buildContentCss(DEFAULT_DOCUMENT_SETTINGS, template, scopeClass),
+    [template, scopeClass],
+  )
+
+  return (
+    <div
+      className="relative h-44 overflow-hidden border-b border-neutral-200 bg-white dark:border-neutral-800"
+      aria-hidden="true"
+    >
+      <style>{contentCss}</style>
+      <div className="origin-top-left" style={{ transform: 'scale(0.42)', width: '238%' }}>
+        <div className={`${scopeClass} px-5 py-4`} dangerouslySetInnerHTML={{ __html: html }} />
+      </div>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white to-transparent" />
+    </div>
+  )
+}
 
 function TemplateCard({ template, onUse }: { template: DocumentTemplate; onUse: () => void }) {
   return (
     <article className="flex flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-      <div
-        className="flex h-36 flex-col justify-center gap-2 border-b border-neutral-200 px-5 dark:border-neutral-800"
-        style={{ backgroundColor: `${template.style.accentColor}0d` }}
-        aria-hidden="true"
-      >
-        <div
-          className="h-2.5 w-2/3 rounded"
-          style={{ backgroundColor: template.style.headingColor, opacity: 0.85 }}
-        />
-        <div className="h-1.5 w-full rounded bg-neutral-300/70 dark:bg-neutral-700/70" />
-        <div className="h-1.5 w-5/6 rounded bg-neutral-300/70 dark:bg-neutral-700/70" />
-        <div className="h-1.5 w-4/6 rounded bg-neutral-300/70 dark:bg-neutral-700/70" />
-      </div>
+      <TemplatePreview template={template} />
       <div className="flex flex-1 flex-col gap-2 p-5">
         <h2 className="text-base font-semibold text-neutral-900 dark:text-white">
           {template.name}

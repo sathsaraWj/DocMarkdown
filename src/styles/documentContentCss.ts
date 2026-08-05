@@ -12,10 +12,19 @@ function getFontStack(id: DocumentSettings['typography']['fontFamily']): {
 
 /**
  * Produces the CSS that styles rendered Markdown content, scoped to
- * `.doc-content`. Shared verbatim between the live preview and the
- * standalone HTML export so both always match the selected template.
+ * `.doc-content` by default. Shared verbatim between the live preview and
+ * the standalone HTML export so both always match the selected template.
+ *
+ * Pass a distinct `scopeClass` when multiple differently-styled previews
+ * (e.g. one per template on the Templates page) render on the same page at
+ * once — otherwise every instance's CSS custom properties would collide on
+ * the shared `.doc-content` selector and only the last one would win.
  */
-export function buildContentCss(settings: DocumentSettings, template: DocumentTemplate): string {
+export function buildContentCss(
+  settings: DocumentSettings,
+  template: DocumentTemplate,
+  scopeClass = 'doc-content',
+): string {
   const { typography, content } = settings
   const { style } = template
   const fonts = getFontStack(typography.fontFamily)
@@ -47,7 +56,7 @@ export function buildContentCss(settings: DocumentSettings, template: DocumentTe
     )
     .join('\n')
 
-  return `
+  const css = `
   .doc-content {
     --doc-accent: ${style.accentColor};
     --doc-heading-color: ${style.headingColor};
@@ -181,4 +190,6 @@ export function buildContentCss(settings: DocumentSettings, template: DocumentTe
     border-radius: 6px;
   }
 `
+
+  return scopeClass === 'doc-content' ? css : css.replaceAll('.doc-content', `.${scopeClass}`)
 }
